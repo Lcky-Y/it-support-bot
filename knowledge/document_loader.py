@@ -52,6 +52,7 @@ CATEGORY_BY_FILE = {
     "network.md": "network",
     "docker.md": "docker",
     "linux.md": "linux",
+    "node.md": "node",
 }
 
 _BULLET_RE = re.compile(r"^[-*]\s+")

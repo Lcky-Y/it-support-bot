@@ -11,7 +11,8 @@ import re
 TECHNOLOGIES = [
     "docker", "docker-compose", "compose", "container", "镜像", "容器", "registry",
     "python", "pip", "torch", "pytorch", "cuda", "conda", "anaconda", "miniconda",
-    "git", "github", "gitlab", "npm", "node", "yarn", "java", "maven", "gradle",
+    "git", "github", "gitlab", "npm", "node", "nodejs", "nvm", "npx", "pnpm",
+    "node-gyp", "yarn", "java", "maven", "gradle",
     "mysql", "postgres", "postgresql", "redis", "mongodb", "nginx", "kubernetes",
     "k8s", "vue", "react", "wsl", "vscode", "jupyter", "tensorflow",
 ]
