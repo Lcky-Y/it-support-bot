@@ -14,12 +14,13 @@ Stage 5.2：Hybrid 融合 —— Lexical Top-N + Vector Top-N → RRF 融合
 import re
 
 from config import (
-    DOCUMENTS_DIR, FUSION_TOP_N, RRF_K, EXACT_BOOST,
+    FUSION_TOP_N, RRF_K, EXACT_BOOST, KNOWLEDGE_DB_PATH,
 )
 from knowledge.document_loader import load_documents
 from knowledge.text_splitter import split_entries
 from knowledge.embedding_model import dependencies_available, get_embedder
 from knowledge.vector_store import VectorStore
+from knowledge.repository import KnowledgeRepository
 
 
 def _bigrams(text: str) -> set:
@@ -29,9 +30,16 @@ def _bigrams(text: str) -> set:
 
 
 class KnowledgeService:
-    def __init__(self, documents_dir: str = DOCUMENTS_DIR, use_vector: bool = True):
-        entries = load_documents(documents_dir)
-        self.chunks = split_entries(entries)
+    def __init__(self, documents_dir=None, use_vector: bool = True, db_path=None):
+        # 默认从 SQLite 知识库读取 chunk（由 Markdown 导入）；数据库缺失/为空时回退到
+        # 直接解析 Markdown。显式传入 documents_dir 时按旧逻辑直接读取该目录（测试/离线源）。
+        if documents_dir is None:
+            repo = KnowledgeRepository(db_path or KNOWLEDGE_DB_PATH)
+            self.chunks = repo.get_all_chunks()
+            if not self.chunks:
+                self.chunks = split_entries(load_documents())
+        else:
+            self.chunks = split_entries(load_documents(documents_dir))
 
         # (source, title) -> 完整 chunk（含 keywords），用于融合时补齐向量结果的字段
         self._chunk_index = {(c["source"], c["title"]): c for c in self.chunks}

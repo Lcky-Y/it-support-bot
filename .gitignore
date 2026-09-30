@@ -18,6 +18,12 @@ logs/*.log
 # ===== 向量索引（派生文件，clone 后按 README 重建）=====
 knowledge/embeddings/
 
+# ===== SQLite 知识库（派生文件，由 knowledge/importer.py 从 Markdown 导入生成）=====
+knowledge/database/
+
+# ===== 本地 embedding 模型（体积大，按 README 放置到 knowledge/models/）=====
+knowledge/models/
+
 # ===== IDE / 系统 =====
 .vscode/
 .idea/

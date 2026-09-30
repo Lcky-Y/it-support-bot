@@ -50,14 +50,17 @@
 │   └── prompts.py             # 提示词
 ├── knowledge/                  # 知识库
 │   ├── __init__.py
-│   ├── document_loader.py      # Markdown 文档加载
+│   ├── document_loader.py      # Markdown 文档加载（导入源）
 │   ├── text_splitter.py        # 知识条目切块
-│   ├── embedding_model.py      # embedding 模型（可选加载）
+│   ├── repository.py           # SQLite 知识仓库（运行时读取）
+│   ├── importer.py             # Markdown -> SQLite 导入脚本
+│   ├── schema.sql              # SQLite 表结构
+│   ├── embedding_model.py      # embedding 模型（本地离线加载）
 │   ├── vector_store.py         # FAISS 向量存储（构建/保存/检索）
 │   ├── build_index.py          # 向量索引构建脚本
 │   ├── rules.json             # 故障诊断规则库（45 条）
 │   ├── faq.json               # 补充 FAQ
-│   ├── documents/             # 技术知识库文档（72 条）
+│   ├── documents/             # 技术知识库文档（72 条，导入源）
 │   │   ├── python.md
 │   │   ├── pip.md
 │   │   ├── conda.md
@@ -66,6 +69,10 @@
 │   │   ├── pytorch.md
 │   │   ├── cuda.md
 │   │   └── network.md
+│   ├── database/              # SQLite 知识库（importer.py 生成）
+│   │   └── knowledge.db
+│   ├── models/                # 本地 embedding 模型（离线，需手动放置）
+│   │   └── paraphrase-multilingual-MiniLM-L12-v2/
 │   └── embeddings/            # 向量索引（build_index.py 生成）
 │       ├── index.faiss
 │       └── metadata.json
@@ -92,20 +99,27 @@
 # 1. 安装基础依赖（规则引擎 + LLM）
 pip install -r requirements.txt
 
-# 2.（可选）安装向量检索依赖，启用 RAG
-pip install -r requirements-rag.txt
-python knowledge/build_index.py     # 构建 FAISS 向量索引（首次会下载 embedding 模型）
+# 2. 导入知识库到 SQLite（Markdown 仅作数据源，运行时从 SQLite 读取）
+python knowledge/importer.py
 
-# 3. 配置 .env（填入 DeepSeek API Key；不填则退化为纯规则引擎）
+# 3.（可选）安装向量检索依赖，启用 RAG
+pip install -r requirements-rag.txt
+#    a) 将 embedding 模型放置到 knowledge/models/paraphrase-multilingual-MiniLM-L12-v2/
+#       （完全离线加载，不再联网下载；本地缺失时自动降级为关键词检索）
+#    b) 构建 FAISS 向量索引
+python knowledge/build_index.py
+
+# 4. 配置 .env（填入 DeepSeek API Key；不填则退化为纯规则引擎）
 #    OPENAI_API_KEY=sk-xxx
 #    OPENAI_BASE_URL=https://api.deepseek.com
 #    LLM_MODEL_NAME=deepseek-flash
 
-# 4. 运行
+# 5. 运行
 python main.py
 ```
 
-> 未安装 RAG 依赖或未构建索引时，系统自动降级为关键词检索，功能不受影响。
+> 未安装 RAG 依赖、未放置本地模型或未构建索引时，系统自动降级为关键词检索，功能不受影响。
+> 除 LLM API 调用外，系统全程本地离线运行（规则 / SQLite / 向量检索 / embedding 均不联网）。
 
 ## 环境变量
 
@@ -117,6 +131,7 @@ python main.py
 | `OPENAI_BASE_URL` | API 服务地址 | `https://api.deepseek.com` |
 | `LLM_MODEL_NAME` | 兜底大模型名称 | `deepseek-flash` |
 | `EMBEDDING_MODEL_NAME` | RAG 多语言 embedding 模型 | `paraphrase-multilingual-MiniLM-L12-v2` |
+| `EMBEDDING_MODEL_PATH` | 本地 embedding 模型路径（离线加载） | `knowledge/models/<EMBEDDING_MODEL_NAME>` |
 
 ## CLI 命令
 
@@ -215,13 +230,19 @@ retrieve(query, top_k)
 ```
 
 - **模型**：`paraphrase-multilingual-MiniLM-L12-v2`（中英文多语言，384 维）
+- **模型加载**：从 `knowledge/models/` 本地目录离线加载（`local_files_only`），禁止访问 Hugging Face
+- **知识存储**：SQLite（`knowledge/database/knowledge.db`），Markdown 仅作导入源
 - **向量相似度**：L2 归一化 + `IndexFlatIP`（等价余弦相似度）
 - **融合**：Reciprocal Rank Fusion（k=60），Lexical Top-10 + Vector Top-10
 - **Exact Match Boost**：技术错误精确命中按命中强度加权，保证精确错误名不被语义相近的其它条目挤掉
 - **惰性加载**：仅首次触发检索时才加载 torch + 模型，规则命中的常规对话零开销
 - **索引持久化**：`knowledge/embeddings/`（`index.faiss` + `metadata.json`）
 
-修改 `knowledge/documents/` 后需重新构建索引：`python knowledge/build_index.py`。
+修改 `knowledge/documents/` 后需重新导入并重建索引：
+
+```bash
+python knowledge/importer.py && python knowledge/build_index.py
+```
 
 ### Benchmark 对比（42 精确 + 10 语义改写）
 

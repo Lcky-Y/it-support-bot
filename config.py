@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 项目版本
-VERSION = "1.1"
+VERSION = "1.2"
 
 # 加载 .env 文件中的环境变量（如 API Key）
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -22,6 +22,9 @@ DOCUMENTS_DIR = os.path.join(KNOWLEDGE_DIR, "documents")     # 技术知识库 M
 EMBEDDINGS_DIR = os.path.join(KNOWLEDGE_DIR, "embeddings")   # 向量索引与元数据目录
 FAISS_INDEX_PATH = os.path.join(EMBEDDINGS_DIR, "index.faiss")
 METADATA_PATH = os.path.join(EMBEDDINGS_DIR, "metadata.json")
+
+DATABASE_DIR = os.path.join(KNOWLEDGE_DIR, "database")          # SQLite 知识库目录
+KNOWLEDGE_DB_PATH = os.path.join(DATABASE_DIR, "knowledge.db")  # 运行时知识库（由 Markdown 导入）
 
 LOGS_DIR = os.path.join(BASE_DIR, "logs")
 FALLBACK_LOG_PATH = os.path.join(LOGS_DIR, "fallback_queries.csv")   # 未命中规则、转交 LLM 的问题
@@ -48,6 +51,13 @@ MAX_HISTORY_TURNS = 6   # 传给大模型的最近对话轮数上限，避免上
 # 多语言 embedding 模型，中英文 IT 文本均可处理
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "paraphrase-multilingual-MiniLM-L12-v2")
 RAG_TOP_K = 3   # 检索返回的知识片段数量
+
+# 本地 embedding 模型目录（完全离线加载，不访问 Hugging Face）
+MODELS_DIR = os.path.join(KNOWLEDGE_DIR, "models")
+EMBEDDING_MODEL_PATH = os.getenv(
+    "EMBEDDING_MODEL_PATH",
+    os.path.join(MODELS_DIR, EMBEDDING_MODEL_NAME),
+)
 
 # ------------------ Hybrid 融合检索（RRF）配置 ------------------
 FUSION_TOP_N = 10   # 融合前各检索器取的前 N 条
