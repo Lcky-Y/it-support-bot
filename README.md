@@ -17,8 +17,9 @@
 | PyTorch | CUDA 不可用、显存不足、模型加载、版本匹配 |
 | 网络 | SSL、超时、连接错误、代理、DNS |
 | Docker | daemon、镜像拉取、容器退出、端口/网络、数据卷、compose、WSL2 |
+| Linux | 权限、apt/yum、systemd、端口、磁盘、SSH、防火墙、环境变量 |
 
-规则库共 **45 条**，技术知识库文档 **109 条**（`knowledge/documents/`，含 Docker 37 条），测试问题 **98 条**，规则识别准确率目标 ≥ 85%（当前 100%）。RAG 检索 benchmark（56 精确 + 14 语义改写）：Hybrid Recall@1=71.4% / Recall@3=97.1% / Recall@5=100%。
+规则库共 **45 条**，技术知识库文档 **163 条**（`knowledge/documents/`，含 Docker 37 条、Linux 54 条），测试问题 **98 条**，规则识别准确率目标 ≥ 85%（当前 100%）。RAG 检索 benchmark（86 精确 + 26 语义改写）：Hybrid Recall@1=72.3% / Recall@3=98.2% / Recall@5=99.1%。
 
 ## 架构
 
@@ -62,7 +63,7 @@
 │   ├── build_index.py          # 向量索引构建脚本
 │   ├── rules.json             # 故障诊断规则库（45 条）
 │   ├── faq.json               # 补充 FAQ
-│   ├── documents/             # 技术知识库文档（109 条，导入源）
+│   ├── documents/             # 技术知识库文档（163 条，导入源）
 │   │   ├── python.md
 │   │   ├── pip.md
 │   │   ├── conda.md
@@ -71,7 +72,8 @@
 │   │   ├── pytorch.md
 │   │   ├── cuda.md
 │   │   ├── network.md
-│   │   └── docker.md
+│   │   ├── docker.md
+│   │   └── linux.md
 │   ├── database/              # SQLite 知识库（importer.py 生成）
 │   │   └── knowledge.db
 │   ├── models/                # 本地 embedding 模型（离线，需手动放置）
@@ -93,7 +95,7 @@
     ├── test_cli.py
     ├── test_e2e.py
     ├── test_cases.json        # 98 条标注问题集
-    └── test_cases_rag.json    # 56 精确 + 14 语义改写 RAG benchmark
+    └── test_cases_rag.json    # 86 精确 + 26 语义改写 RAG benchmark
 ```
 
 ## 快速开始
@@ -254,6 +256,7 @@ retrieve(query, top_k, mode)
 - **融合**：Reciprocal Rank Fusion（k=60），Lexical Top-10 + Vector Top-10
 - **Exact Match Boost**：技术错误精确命中按命中强度加权
 - **Metadata Boost**：技术栈 / 平台匹配给予额外加成
+- **词边界匹配**：ASCII 关键词用词边界（避免 "ip" 误命中 "pip"、"error" 误命中 "SyntaxError"），中文用子串
 - **惰性加载**：仅首次触发检索时才加载 torch + 模型，规则命中的常规对话零开销
 - **索引持久化**：`knowledge/embeddings/`（`index.faiss` + `metadata.json`）
 
@@ -263,15 +266,17 @@ retrieve(query, top_k, mode)
 python knowledge/importer.py && python knowledge/build_index.py
 ```
 
-### Benchmark 对比（56 精确 + 14 语义改写）
+### Benchmark 对比（86 精确 + 26 语义改写）
 
 | 检索器 | Recall@1 | Recall@3 | Recall@5 |
 |---|---|---|---|
-| Lexical（关键词） | 55.7% | 97.1% | 97.1% |
-| Vector（向量） | 61.4% | 82.9% | 87.1% |
-| **Hybrid（融合）** | **71.4%** | **97.1%** | **100%** |
+| Lexical（关键词） | 61.6% | 92.0% | 98.2% |
+| Vector（向量） | 59.8% | 80.4% | 88.4% |
+| **Hybrid（融合）** | **72.3%** | **98.2%** | **99.1%** |
 
-语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 14.3% 提升到 28.6%，同时 Recall@3 不低于 Lexical。
+MRR（Mean Reciprocal Rank，正确条目排名越靠前越好）：Lexical 0.774 / Vector 0.717 / **Hybrid 0.848**。
+
+语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 30.8% 提升到 38.5%，Recall@3 从 80.8% 提升到 92.3%。
 
 ## 已知限制
 

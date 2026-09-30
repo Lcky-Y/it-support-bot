@@ -32,6 +32,17 @@ def _bigrams(text: str) -> set:
     return {cleaned[i:i + 2] for i in range(len(cleaned) - 1)}
 
 
+def _term_in(query_lower: str, term: str) -> bool:
+    """词项是否命中查询：ASCII 词用词边界（避免 "ip" 命中 "pip"、"error" 命中 "SyntaxError"），
+    中文词用子串匹配。"""
+    t = (term or "").lower()
+    if not t:
+        return False
+    if t.isascii():
+        return re.search(r"(?<![A-Za-z0-9])" + re.escape(t) + r"(?![A-Za-z0-9])", query_lower) is not None
+    return t in query_lower
+
+
 class KnowledgeService:
     def __init__(self, documents_dir=None, use_vector: bool = True, db_path=None):
         # 默认从 SQLite 知识库读取 chunk（由 Markdown 导入）；数据库缺失/为空时回退到
@@ -84,15 +95,15 @@ class KnowledgeService:
     # 单路检索
     # ------------------------------------------------------------------
     def _keyword_hits(self, query_lower: str, chunk: dict) -> int:
-        return sum(1 for kw in chunk.get("keywords", []) if kw and kw.lower() in query_lower)
+        return sum(1 for kw in chunk.get("keywords", []) if _term_in(query_lower, kw))
 
     def _score_chunk(self, query_lower: str, chunk: dict) -> float:
         score = 0.0
         for kw in chunk.get("keywords", []):
-            if kw and kw.lower() in query_lower:
+            if _term_in(query_lower, kw):
                 score += 3
         for alias in chunk.get("aliases", []):
-            if alias and alias.lower() in query_lower:
+            if _term_in(query_lower, alias):
                 score += 4
         title = chunk.get("title", "").lower()
         if title and title in query_lower:
@@ -151,7 +162,7 @@ class KnowledgeService:
         out = []
         for score, chunk in scored:
             hits = self._keyword_hits(query_lower, chunk)
-            hits += sum(1 for a in chunk.get("aliases", []) if a and a.lower() in query_lower)
+            hits += sum(1 for a in chunk.get("aliases", []) if _term_in(query_lower, a))
             title = (chunk.get("title") or "").lower()
             if title and title in query_lower:
                 hits += 3   # 标题被完整命中，信号极强

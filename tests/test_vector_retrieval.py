@@ -34,6 +34,21 @@ def _recall(ks, cases, mode, top_k=5):
     return {k: hits[k] / n for k in (1, 3, 5)}
 
 
+def _mrr(ks, cases, mode, top_k=10):
+    """Mean Reciprocal Rank：正确条目排名的倒数平均值，衡量排得是否靠前。"""
+    total = 0.0
+    n = 0
+    for c in cases:
+        top = ks.retrieve(c["query"], top_k=top_k, mode=mode)
+        titles = [t["title"] for t in top]
+        for rank, t in enumerate(titles, 1):
+            if t == c["expected_title"]:
+                total += 1.0 / rank
+                break
+        n += 1
+    return total / n if n else 0.0
+
+
 def test_fallback_without_vector():
     ks = KnowledgeService(use_vector=False)   # 强制走关键词兜底
     r = ks.retrieve("No module named torch", top_k=3)
@@ -108,11 +123,16 @@ def test_benchmark_recall():
             r = _recall(ks, paraphrase, mode)
             print(f"    {mode:8s} 改写  -> {_fmt(r)}")
 
+    print("  —— MRR（正确条目排名越靠前越好）——")
+    for mode in ("lexical", "vector", "hybrid"):
+        print(f"    {mode:8s} MRR   -> {_mrr(ks, all_cases, mode):.4f}")
+
     lex = _recall(ks, all_cases, "lexical")
     hyb = _recall(ks, all_cases, "hybrid")
     assert hyb[3] >= 0.90, f"Hybrid Recall@3 应 >= 90%，实际 {hyb[3]:.1%}"
     assert hyb[3] >= lex[3], f"Hybrid Recall@3 应 >= Lexical（{lex[3]:.1%}），实际 {hyb[3]:.1%}"
     assert hyb[1] >= lex[1], f"Hybrid Recall@1 应 >= Lexical（{lex[1]:.1%}），实际 {hyb[1]:.1%}"
+    assert _mrr(ks, all_cases, "hybrid") >= 0.5, "Hybrid MRR 应 >= 0.5"
 
 
 def main():
