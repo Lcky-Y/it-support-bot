@@ -308,6 +308,9 @@ MRR（Mean Reciprocal Rank，正确条目排名越靠前越好）：Lexical 0.84
 `ui/app.py` 仅做展示层，复用 `chatbot.reply / get_history / clear / status` 与 `knowledge.retrieve`，
 与 CLI 共用同一套核心逻辑，无分叉。
 
+> `.streamlit/config.toml` 关闭了文件监听（`fileWatcherType = "none"`），
+> 避免 Streamlit 启动时逐个 import `transformers` 懒加载子模块（依赖未安装的 `torchvision`）而产生大量无害 traceback。
+
 ## 已知限制
 
 - 知识库文档变更后需手动重建向量索引（`python knowledge/build_index.py`）。

@@ -1,0 +1,7 @@
+# Streamlit 运行配置
+# fileWatcherType = "none"：关闭文件监听（自动重载）。
+# 原因：sentence-transformers 引入的 transformers 库会懒加载大量子模块，
+# Streamlit 的文件监听器在启动时会逐个 import 这些子模块以收集路径，
+# 其中视觉模型依赖未安装的 torchvision，产生大量无害但极吵的 traceback。
+[server]
+fileWatcherType = "none"
