@@ -1566,7 +1566,7 @@ npm node
 npm_package_json_syntax
 
 ### 关键词
-package.json JSON 语法 错误 解析 parse 格式 逗号 括号
+package.json JSON 解析 parse 语法错误 格式 逗号 括号
 
 ### 症状
 - npm install 报 JSON 解析失败

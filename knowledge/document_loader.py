@@ -53,6 +53,8 @@ CATEGORY_BY_FILE = {
     "docker.md": "docker",
     "linux.md": "linux",
     "node.md": "node",
+    "java.md": "java",
+    "maven.md": "maven",
 }
 
 _BULLET_RE = re.compile(r"^[-*]\s+")
