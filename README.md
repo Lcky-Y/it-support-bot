@@ -108,6 +108,7 @@
     ├── test_vector_retrieval.py
     ├── test_cli.py
     ├── test_e2e.py
+    ├── test_ui.py             # Streamlit UI 冒烟测试（AppTest）
     ├── test_cases.json        # 98 条标注问题集
     └── test_cases_rag.json    # 229 精确 + 70 语义改写 RAG benchmark
 ```
@@ -179,6 +180,7 @@ python tests/test_documents.py        # 知识库文档与检索测试
 python tests/test_vector_retrieval.py # RAG 向量/Hybrid 检索 + Recall 基准
 python tests/test_cli.py              # CLI 命令解析与分派测试
 python tests/test_e2e.py              # 端到端场景测试
+python tests/test_ui.py               # Streamlit UI 冒烟测试（AppTest，需 streamlit）
 ```
 
 ## 匹配打分
