@@ -55,6 +55,9 @@ CATEGORY_BY_FILE = {
     "node.md": "node",
     "java.md": "java",
     "maven.md": "maven",
+    "mysql.md": "mysql",
+    "postgresql.md": "postgresql",
+    "sqlite.md": "sqlite",
 }
 
 _BULLET_RE = re.compile(r"^[-*]\s+")

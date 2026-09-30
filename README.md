@@ -21,8 +21,11 @@
 | Node.js | npm 安装/依赖、ERESOLVE、命令未找到、PATH、nvm、node-gyp、内存 |
 | Java | 命令未找到、JAVA_HOME、类加载错误、OOM、Spring Boot |
 | Maven | 依赖解析、镜像/代理/SSL、插件、pom.xml、打包、多模块 |
+| MySQL | 认证、连接、SQL 语法、死锁/锁等待、字符集、授权 |
+| PostgreSQL | peer 认证、pg_hba、连接、表权限、端口、编码 |
+| SQLite | 数据库锁、文件/权限、线程、表结构、磁盘 |
 
-规则库共 **45 条**，技术知识库文档 **256 条**（`knowledge/documents/`，含 Docker 37 条、Linux 54 条、Node/npm 45 条、Java 25 条、Maven 23 条），测试问题 **98 条**，规则识别准确率目标 ≥ 85%（当前 100%）。RAG 检索 benchmark（185 精确 + 55 语义改写）：Hybrid Recall@1=80.4% / Recall@3=98.8% / Recall@5=99.6%。
+规则库共 **45 条**，技术知识库文档 **300 条**（`knowledge/documents/`，含 Docker 37 条、Linux 54 条、Node/npm 45 条、Java 25 条、Maven 23 条、MySQL 18 条、PostgreSQL 15 条、SQLite 11 条），测试问题 **98 条**，规则识别准确率目标 ≥ 85%（当前 100%）。RAG 检索 benchmark（229 精确 + 70 语义改写）：Hybrid Recall@1=82.9% / Recall@3=99.0% / Recall@5=99.7%。
 
 ## 架构
 
@@ -66,7 +69,7 @@
 │   ├── build_index.py          # 向量索引构建脚本
 │   ├── rules.json             # 故障诊断规则库（45 条）
 │   ├── faq.json               # 补充 FAQ
-│   ├── documents/             # 技术知识库文档（256 条，导入源）
+│   ├── documents/             # 技术知识库文档（300 条，导入源）
 │   │   ├── python.md
 │   │   ├── pip.md
 │   │   ├── conda.md
@@ -79,7 +82,10 @@
 │   │   ├── linux.md
 │   │   ├── node.md
 │   │   ├── java.md
-│   │   └── maven.md
+│   │   ├── maven.md
+│   │   ├── mysql.md
+│   │   ├── postgresql.md
+│   │   └── sqlite.md
 │   ├── database/              # SQLite 知识库（importer.py 生成）
 │   │   └── knowledge.db
 │   ├── models/                # 本地 embedding 模型（离线，需手动放置）
@@ -101,7 +107,7 @@
     ├── test_cli.py
     ├── test_e2e.py
     ├── test_cases.json        # 98 条标注问题集
-    └── test_cases_rag.json    # 185 精确 + 55 语义改写 RAG benchmark
+    └── test_cases_rag.json    # 229 精确 + 70 语义改写 RAG benchmark
 ```
 
 ## 快速开始
@@ -272,17 +278,17 @@ retrieve(query, top_k, mode)
 python knowledge/importer.py && python knowledge/build_index.py
 ```
 
-### Benchmark 对比（185 精确 + 55 语义改写）
+### Benchmark 对比（229 精确 + 70 语义改写）
 
 | 检索器 | Recall@1 | Recall@3 | Recall@5 |
 |---|---|---|---|
-| Lexical（关键词） | 71.7% | 92.5% | 96.2% |
-| Vector（向量） | 59.6% | 78.3% | 84.2% |
-| **Hybrid（融合）** | **80.4%** | **98.8%** | **99.6%** |
+| Lexical（关键词） | 75.3% | 93.0% | 96.3% |
+| Vector（向量） | 59.9% | 78.6% | 83.3% |
+| **Hybrid（融合）** | **82.9%** | **99.0%** | **99.7%** |
 
-MRR（Mean Reciprocal Rank，正确条目排名越靠前越好）：Lexical 0.822 / Vector 0.702 / **Hybrid 0.889**。
+MRR（Mean Reciprocal Rank，正确条目排名越靠前越好）：Lexical 0.841 / Vector 0.702 / **Hybrid 0.901**。
 
-语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 47.3% 提升到 56.4%，Recall@3 从 89.1% 提升到 94.5%。
+语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 52.9% 提升到 60.0%，Recall@3 从 87.1% 提升到 95.7%。
 
 ## 已知限制
 

@@ -14,7 +14,7 @@ TECHNOLOGIES = [
     "git", "github", "gitlab", "npm", "node", "nodejs", "nvm", "npx", "pnpm",
     "node-gyp", "yarn", "java", "jdk", "jre", "jvm", "javac", "maven", "mvn",
     "gradle", "spring", "springboot",
-    "mysql", "postgres", "postgresql", "redis", "mongodb", "nginx", "kubernetes",
+    "mysql", "mysqld", "postgres", "postgresql", "psql", "sqlite", "redis", "mongodb", "nginx", "kubernetes",
     "k8s", "vue", "react", "wsl", "vscode", "jupyter", "tensorflow",
 ]
 
