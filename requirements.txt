@@ -2,5 +2,12 @@
 openai>=1.50.0        # OpenAI SDK for DeepSeek-compatible services
 python-dotenv>=1.0.0  # load environment variables from .env
 
+# ===== Web UI =====
+# Streamlit Community Cloud 仅读取根目录 requirements.txt，故在此声明
+streamlit>=1.57
+
 # Note: rule engine / error parser / knowledge retrieval only use the Python
 # standard library (json, re, difflib, csv), no extra dependencies required.
+#
+# 向量检索（Hybrid）依赖 requirements-rag.txt（sentence-transformers + faiss-cpu），
+# 且需本地放置 embedding 模型。云端未安装/未放置时自动降级为关键词检索，功能不受影响。

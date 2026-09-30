@@ -14,6 +14,24 @@ VERSION = "1.2"
 # 加载 .env 文件中的环境变量（如 API Key）
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
+
+def _env_or_secret(name: str, default: str = "") -> str:
+    """优先读环境变量（本地 .env / 系统），其次读 Streamlit Cloud 的 st.secrets。
+
+    st.secrets 惰性加载：仅在环境变量缺失时尝试 import streamlit，避免 CLI / 测试
+    等非 Streamlit 环境产生不必要的依赖与告警。
+    """
+    value = os.getenv(name)
+    if value:
+        return value
+    try:
+        import streamlit as st
+        if name in st.secrets:
+            return str(st.secrets[name])
+    except Exception:
+        pass
+    return default
+
 # ------------------ 路径配置 ------------------
 KNOWLEDGE_DIR = os.path.join(BASE_DIR, "knowledge")          # 知识库目录
 RULES_PATH = os.path.join(KNOWLEDGE_DIR, "rules.json")       # 故障诊断规则库
@@ -37,9 +55,9 @@ MATCH_THRESHOLD = 0.60
 RULE_CONFIDENT_THRESHOLD = 0.80
 
 # ------------------ 大模型兜底配置 ------------------
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.deepseek.com")
-LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", "deepseek-flash")
+OPENAI_API_KEY = _env_or_secret("OPENAI_API_KEY")
+OPENAI_BASE_URL = _env_or_secret("OPENAI_BASE_URL", "https://api.deepseek.com")
+LLM_MODEL_NAME = _env_or_secret("LLM_MODEL_NAME", "deepseek-flash")
 LLM_TIMEOUT = 30
 # 未配置 API Key 时自动关闭 LLM，系统退化为纯规则引擎，便于本地测试
 LLM_ENABLED = bool(OPENAI_API_KEY)

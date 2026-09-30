@@ -1,3 +1,0 @@
-# ===== Streamlit UI =====
-# 需同时安装 requirements.txt（核心）与 requirements-rag.txt（向量检索）
-streamlit>=1.57

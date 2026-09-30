@@ -137,8 +137,7 @@ python knowledge/build_index.py
 # 5. 运行（CLI）
 python main.py
 
-# 6.（可选）运行 Web UI
-pip install -r requirements-ui.txt
+# 6. 运行 Web UI（streamlit 已含在 requirements.txt 中）
 streamlit run ui/app.py
 ```
 
@@ -312,6 +311,15 @@ MRR（Mean Reciprocal Rank，正确条目排名越靠前越好）：Lexical 0.84
 
 > `.streamlit/config.toml` 关闭了文件监听（`fileWatcherType = "none"`），
 > 避免 Streamlit 启动时逐个 import `transformers` 懒加载子模块（依赖未安装的 `torchvision`）而产生大量无害 traceback。
+
+### 部署到 Streamlit Community Cloud
+
+1. 在 Community Cloud 选择 `From a GitHub repo`，连接本仓库（需为公开仓库）。
+2. 选择分支 `feature/v1.2-local-db-ui`。
+3. **Main file path 填 `ui/app.py`**（入口不在仓库根目录，需显式指定）。
+4. 部署后云端仅安装 `requirements.txt`（含 streamlit + openai + dotenv）；
+   未安装 RAG 依赖、未放置本地模型时自动降级为关键词检索，界面状态会显示 `Lexical`。
+5. 如需启用 LLM：在 App 设置 → Secrets 中填 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`LLM_MODEL_NAME`。
 
 ## 已知限制
 
