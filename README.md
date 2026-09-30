@@ -97,6 +97,8 @@
 │   ├── logger.py              # 日志（fallback_queries.csv / conversations.csv）
 │   ├── history.py             # 对话历史 + 诊断上下文
 │   └── knowledge_service.py   # RAG 检索（向量优先 + 关键词降级）
+├── ui/                        # Streamlit Web UI（纯展示层，复用核心）
+│   └── app.py
 ├── logs/                      # 运行日志（自动生成）
 └── tests/                     # 测试
     ├── test_rule_engine.py
@@ -131,8 +133,12 @@ python knowledge/build_index.py
 #    OPENAI_BASE_URL=https://api.deepseek.com
 #    LLM_MODEL_NAME=deepseek-flash
 
-# 5. 运行
+# 5. 运行（CLI）
 python main.py
+
+# 6.（可选）运行 Web UI
+pip install -r requirements-ui.txt
+streamlit run ui/app.py
 ```
 
 > 未安装 RAG 依赖、未放置本地模型或未构建索引时，系统自动降级为关键词检索，功能不受影响。
@@ -290,9 +296,20 @@ MRR（Mean Reciprocal Rank，正确条目排名越靠前越好）：Lexical 0.84
 
 语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 52.9% 提升到 60.0%，Recall@3 从 87.1% 提升到 95.7%。
 
+## Streamlit UI
+
+运行 `streamlit run ui/app.py` 后提供 Web 交互界面：
+
+- 多轮对话展示（`st.chat_message` / `st.chat_input`）
+- 每条回答折叠展示「参考来源 · 检索方式 · 命中知识」
+- 左侧边栏系统状态（规则数、知识库、检索模式、向量模型、LLM）
+- 清空会话按钮、检索详情开关
+
+`ui/app.py` 仅做展示层，复用 `chatbot.reply / get_history / clear / status` 与 `knowledge.retrieve`，
+与 CLI 共用同一套核心逻辑，无分叉。
+
 ## 已知限制
 
-- 仅提供 CLI 交互，无 Web / GUI 界面（后续可加 FastAPI）。
 - 知识库文档变更后需手动重建向量索引（`python knowledge/build_index.py`）。
 - 向量检索依赖 `sentence-transformers`（含 torch）等重型依赖，未安装时自动降级为关键词检索。
 - embedding 为单个多语言模型，未做 rerank；对“驱动正常但仍不用 GPU”这类强语义推理仍有边界。
