@@ -1,0 +1,65 @@
+{
+  "benchmark_cases": [
+    {"query": "No module named numpy", "expected_source": "documents/python.md", "expected_title": "ModuleNotFoundError 模块缺失"},
+    {"query": "导入模块报 ImportError", "expected_source": "documents/python.md", "expected_title": "ImportError 导入失败"},
+    {"query": "代码有语法错误 SyntaxError", "expected_source": "documents/python.md", "expected_title": "SyntaxError 语法错误"},
+    {"query": "TypeError NoneType not callable", "expected_source": "documents/python.md", "expected_title": "TypeError 类型错误"},
+    {"query": "文件找不到 FileNotFoundError", "expected_source": "documents/python.md", "expected_title": "FileNotFoundError 文件未找到"},
+    {"query": "怎么创建 venv 虚拟环境", "expected_source": "documents/python.md", "expected_title": "虚拟环境 venv"},
+
+    {"query": "pip 找不到包", "expected_source": "documents/pip.md", "expected_title": "pip 找不到可安装的包"},
+    {"query": "pip 依赖冲突", "expected_source": "documents/pip.md", "expected_title": "pip 依赖冲突"},
+    {"query": "pip install 报 SSL 证书错误", "expected_source": "documents/pip.md", "expected_title": "pip SSL 证书错误"},
+    {"query": "pip 安装超时", "expected_source": "documents/pip.md", "expected_title": "pip 安装超时"},
+    {"query": "pip 换清华镜像源", "expected_source": "documents/pip.md", "expected_title": "pip 国内镜像源配置"},
+    {"query": "requirements.txt 安装依赖", "expected_source": "documents/pip.md", "expected_title": "requirements.txt 安装"},
+
+    {"query": "conda 创建环境", "expected_source": "documents/conda.md", "expected_title": "conda 创建环境"},
+    {"query": "conda activate 失败", "expected_source": "documents/conda.md", "expected_title": "conda 激活环境失败"},
+    {"query": "conda Solving environment 卡住", "expected_source": "documents/conda.md", "expected_title": "conda 依赖冲突 Solving environment"},
+    {"query": "conda 命令找不到", "expected_source": "documents/conda.md", "expected_title": "conda 命令未找到"},
+    {"query": "conda 配置清华镜像", "expected_source": "documents/conda.md", "expected_title": "conda channel 慢 / 镜像"},
+
+    {"query": "git 认证失败", "expected_source": "documents/git.md", "expected_title": "git 认证失败"},
+    {"query": "git 合并冲突", "expected_source": "documents/git.md", "expected_title": "git 合并冲突"},
+    {"query": "git push 被拒绝", "expected_source": "documents/git.md", "expected_title": "git 推送被拒绝"},
+    {"query": "如何撤销 git 提交", "expected_source": "documents/git.md", "expected_title": "git 撤销操作"},
+    {"query": ".gitignore 忽略文件", "expected_source": "documents/git.md", "expected_title": "git 忽略文件 .gitignore"},
+    {"query": "git 设置代理", "expected_source": "documents/git.md", "expected_title": "git 代理设置"},
+
+    {"query": "命令不是内部或外部命令", "expected_source": "documents/windows.md", "expected_title": "命令未找到"},
+    {"query": "配置 PATH 环境变量", "expected_source": "documents/windows.md", "expected_title": "PATH 环境变量配置"},
+    {"query": "拒绝访问 权限不足", "expected_source": "documents/windows.md", "expected_title": "权限不足 / 拒绝访问"},
+    {"query": "程序无法启动缺少 dll", "expected_source": "documents/windows.md", "expected_title": "DLL 缺失"},
+    {"query": "端口被占用", "expected_source": "documents/windows.md", "expected_title": "端口占用"},
+
+    {"query": "torch.cuda.is_available 返回 false", "expected_source": "documents/pytorch.md", "expected_title": "torch.cuda.is_available() 返回 False"},
+    {"query": "CUDA out of memory 显存不足", "expected_source": "documents/pytorch.md", "expected_title": "CUDA out of memory"},
+    {"query": "安装 pytorch", "expected_source": "documents/pytorch.md", "expected_title": "PyTorch 安装 CPU / CUDA"},
+    {"query": "torch 版本与 cuda 不匹配", "expected_source": "documents/pytorch.md", "expected_title": "torch 与 CUDA 版本不匹配"},
+    {"query": "模型加载失败", "expected_source": "documents/pytorch.md", "expected_title": "模型加载失败"},
+    {"query": "CUDA error 运行时错误", "expected_source": "documents/pytorch.md", "expected_title": "CUDA 运行时错误"},
+
+    {"query": "nvidia-smi 看不到显卡", "expected_source": "documents/cuda.md", "expected_title": "nvidia-smi 无法显示显卡"},
+    {"query": "更新显卡驱动", "expected_source": "documents/cuda.md", "expected_title": "显卡驱动安装 / 更新"},
+    {"query": "查看 CUDA 版本", "expected_source": "documents/cuda.md", "expected_title": "CUDA 版本查询"},
+
+    {"query": "SSL 证书错误", "expected_source": "documents/network.md", "expected_title": "SSL 证书错误"},
+    {"query": "请求超时", "expected_source": "documents/network.md", "expected_title": "请求超时"},
+    {"query": "连接被拒绝", "expected_source": "documents/network.md", "expected_title": "连接被拒绝"},
+    {"query": "DNS 解析失败", "expected_source": "documents/network.md", "expected_title": "DNS 解析失败"},
+    {"query": "配置代理", "expected_source": "documents/network.md", "expected_title": "代理设置"}
+  ],
+  "paraphrase_cases": [
+    {"query": "明明电脑有N卡为什么pytorch还是用CPU", "expected_source": "documents/pytorch.md", "expected_title": "torch.cuda.is_available() 返回 False"},
+    {"query": "显卡驱动正常但深度学习程序就是不用GPU", "expected_source": "documents/pytorch.md", "expected_title": "torch.cuda.is_available() 返回 False"},
+    {"query": "pytorch识别不到我的显卡怎么办", "expected_source": "documents/pytorch.md", "expected_title": "torch.cuda.is_available() 返回 False"},
+    {"query": "训练时报显存不够了", "expected_source": "documents/pytorch.md", "expected_title": "CUDA out of memory"},
+    {"query": "pip 装包的时候一直卡着不动", "expected_source": "documents/pip.md", "expected_title": "pip 安装超时"},
+    {"query": "git 提交上去被服务器打回来了", "expected_source": "documents/git.md", "expected_title": "git 推送被拒绝"},
+    {"query": "网页打不开说证书有问题", "expected_source": "documents/network.md", "expected_title": "SSL 证书错误"},
+    {"query": "程序运行提示缺了个 dll 文件", "expected_source": "documents/windows.md", "expected_title": "DLL 缺失"},
+    {"query": "两个分支改了同一个文件怎么合到一起", "expected_source": "documents/git.md", "expected_title": "git 合并冲突"},
+    {"query": "命令行敲了个命令没反应提示找不到", "expected_source": "documents/windows.md", "expected_title": "命令未找到"}
+  ]
+}

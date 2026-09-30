@@ -1,0 +1,25 @@
+{
+  "faqs": [
+    {
+      "id": "faq_python_version_check",
+      "category": "python",
+      "keywords": ["python 版本", "怎么看版本", "python --version"],
+      "question": "如何查看 Python 版本？",
+      "answer": "在终端运行 python --version 或 python -V。"
+    },
+    {
+      "id": "faq_pip_list",
+      "category": "pip",
+      "keywords": ["已安装的包", "查看包", "pip list"],
+      "question": "如何查看已安装的 Python 包？",
+      "answer": "运行 python -m pip list 或 python -m pip freeze。"
+    },
+    {
+      "id": "faq_git_status",
+      "category": "git",
+      "keywords": ["查看仓库状态", "git status", "改了哪些文件"],
+      "question": "如何查看 Git 仓库当前状态？",
+      "answer": "运行 git status，可查看已修改、已暂存的文件。"
+    }
+  ]
+}

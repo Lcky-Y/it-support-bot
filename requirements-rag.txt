@@ -1,0 +1,5 @@
+# ===== Optional RAG (vector retrieval) dependencies =====
+# If these are not installed, the system automatically falls back to keyword retrieval.
+sentence-transformers>=2.5.0   # multilingual embedding model
+faiss-cpu>=1.7.4               # vector similarity search (CPU)
+# Note: sentence-transformers will install torch / transformers as dependencies.

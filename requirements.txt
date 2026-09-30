@@ -1,0 +1,6 @@
+# ===== LLM / DeepSeek fallback =====
+openai>=1.50.0        # OpenAI SDK for DeepSeek-compatible services
+python-dotenv>=1.0.0  # load environment variables from .env
+
+# Note: rule engine / error parser / knowledge retrieval only use the Python
+# standard library (json, re, difflib, csv), no extra dependencies required.

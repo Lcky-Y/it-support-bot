@@ -1,0 +1,1001 @@
+{
+  "rules": [
+    {
+      "id": "python_module_not_found",
+      "category": "python",
+      "error_type": "ModuleNotFoundError",
+      "priority": 0,
+      "patterns": ["ModuleNotFoundError", "No module named", "找不到模块", "没有这个模块"],
+      "keywords": ["module", "import", "模块", "安装", "import torch"],
+      "response": {
+        "title": "Python 模块缺失 (ModuleNotFoundError)",
+        "causes": [
+          "当前 Python 环境没有安装该模块",
+          "模块安装到了另一个 Python / 虚拟环境（pip 与 python 不一致）",
+          "虚拟环境未激活，或 IDE 使用了错误的解释器"
+        ],
+        "checks": [
+          "确认解释器：python --version、where python",
+          "确认 pip 归属：python -m pip --version",
+          "查看是否已安装：python -m pip show <模块名>"
+        ],
+        "solution": "python -m pip install <模块名>",
+        "further": "请发送 python --version、python -m pip --version、where python 的输出。"
+      }
+    },
+    {
+      "id": "python_import_error",
+      "category": "python",
+      "error_type": "ImportError",
+      "priority": 0,
+      "patterns": ["ImportError", "cannot import name", "导入失败"],
+      "keywords": ["import", "导入", "模块", "循环"],
+      "response": {
+        "title": "Python 导入失败 (ImportError)",
+        "causes": [
+          "模块不存在或未安装",
+          "存在循环导入（A 导入 B，B 又导入 A）",
+          "包内相对导入写错，或运行入口不对"
+        ],
+        "checks": [
+          "确认模块已安装：python -m pip show <模块名>",
+          "检查是否存在循环导入",
+          "检查 from ... import ... 中的名字是否存在"
+        ],
+        "solution": "python -m pip install <模块名>",
+        "further": "请粘贴完整 traceback 以及项目目录结构。"
+      }
+    },
+    {
+      "id": "python_syntax_error",
+      "category": "python",
+      "error_type": "SyntaxError",
+      "priority": 0,
+      "patterns": ["SyntaxError", "IndentationError", "语法错误", "缩进错误"],
+      "keywords": ["syntax", "语法", "缩进", "expected", "invalid"],
+      "response": {
+        "title": "Python 语法/缩进错误 (SyntaxError / IndentationError)",
+        "causes": [
+          "括号、引号未闭合",
+          "冒号缺失、关键字拼写错误",
+          "混用空格与 Tab 导致缩进不一致"
+        ],
+        "checks": [
+          "定位报错行号，逐行检查括号是否闭合",
+          "检查是否混用 Tab 与空格（建议统一为 4 空格）",
+          "查看是否缺少冒号或拼写错误"
+        ],
+        "solution": "python -m py_compile <文件.py> 可快速校验语法",
+        "further": "请粘贴报错行附近 5~10 行代码。"
+      }
+    },
+    {
+      "id": "python_type_error",
+      "category": "python",
+      "error_type": "TypeError",
+      "priority": 0,
+      "patterns": ["TypeError", "类型错误"],
+      "keywords": ["type", "类型", "参数", "argument", "not callable", "NoneType"],
+      "response": {
+        "title": "Python 类型错误 (TypeError)",
+        "causes": [
+          "对不支持的类型执行了运算或调用",
+          "函数参数类型/数量不匹配",
+          "对 None 或 NoneType 调用了方法"
+        ],
+        "checks": [
+          "用 print(type(x)) 确认变量实际类型",
+          "检查函数调用的参数个数与类型",
+          "检查变量是否可能为 None"
+        ],
+        "solution": "在调用前先判断：if x is not None:",
+        "further": "请粘贴完整报错信息与相关代码。"
+      }
+    },
+    {
+      "id": "python_value_error",
+      "category": "python",
+      "error_type": "ValueError",
+      "priority": 0,
+      "patterns": ["ValueError", "值错误"],
+      "keywords": ["value", "值", "invalid literal", "格式", "parse"],
+      "response": {
+        "title": "Python 值错误 (ValueError)",
+        "causes": [
+          "传入函数的参数值不合法（如 int('abc')）",
+          "数组/列表形状不匹配",
+          "字符串格式与预期不符"
+        ],
+        "checks": [
+          "确认输入变量的真实取值",
+          "在类型转换前先校验：str.isdigit() 等",
+          "检查数组维度（如 numpy 数组 shape）"
+        ],
+        "solution": "使用 try/except 捕获并打印异常值：print(repr(value))",
+        "further": "请粘贴报错信息与相关输入数据。"
+      }
+    },
+    {
+      "id": "python_file_not_found",
+      "category": "python",
+      "error_type": "FileNotFoundError",
+      "priority": 0,
+      "patterns": ["FileNotFoundError", "No such file or directory", "找不到文件"],
+      "keywords": ["file", "文件", "路径", "path", "不存在"],
+      "response": {
+        "title": "文件未找到 (FileNotFoundError)",
+        "causes": [
+          "文件路径写错（相对/绝对路径混淆）",
+          "当前工作目录与预期不符",
+          "文件名拼写或扩展名错误"
+        ],
+        "checks": [
+          "用 os.getcwd() 确认当前工作目录",
+          "用 os.path.exists(path) 检查文件是否存在",
+          "检查路径分隔符（Windows 用 \\，或用 raw 字符串）"
+        ],
+        "solution": "使用绝对路径或 os.path.join 拼接路径",
+        "further": "请发送报错中的完整路径与目录列表。"
+      }
+    },
+    {
+      "id": "python_name_error",
+      "category": "python",
+      "error_type": "NameError",
+      "priority": 0,
+      "patterns": ["NameError", "is not defined", "未定义"],
+      "keywords": ["name", "defined", "未定义", "变量", "拼写"],
+      "response": {
+        "title": "Python 名称未定义 (NameError)",
+        "causes": [
+          "变量/函数在使用前未赋值或未定义",
+          "变量名拼写错误",
+          "import 缺失或作用域问题"
+        ],
+        "checks": [
+          "检查拼写是否一致",
+          "确认变量已在使用前定义/赋值",
+          "确认所需的 import 已写在文件顶部"
+        ],
+        "solution": "在文件顶部补充 import，或在使用前定义变量",
+        "further": "请粘贴报错行与相关代码。"
+      }
+    },
+    {
+      "id": "python_permission_error",
+      "category": "python",
+      "error_type": "PermissionError",
+      "priority": 0,
+      "patterns": ["PermissionError", "Errno 13", "权限错误"],
+      "keywords": ["permission", "权限", "拒绝", "denied", "文件占用"],
+      "response": {
+        "title": "Python 权限错误 (PermissionError)",
+        "causes": [
+          "文件被其他程序占用（如 Excel 打开着）",
+          "没有读写权限（需要管理员权限）",
+          "路径指向目录而非文件"
+        ],
+        "checks": [
+          "关闭占用该文件的其他程序",
+          "以管理员身份运行程序",
+          "确认路径指向文件而非目录"
+        ],
+        "solution": "关闭占用进程后重试；Windows 下可右键“以管理员身份运行”",
+        "further": "请说明目标文件/目录路径以及是否被其他程序打开。"
+      }
+    },
+    {
+      "id": "python_venv",
+      "category": "python",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["venv", "virtualenv", "虚拟环境", "激活环境", "activate"],
+      "keywords": ["venv", "虚拟环境", "激活", "activate", "隔离", "环境"],
+      "response": {
+        "title": "Python 虚拟环境问题",
+        "causes": [
+          "虚拟环境未创建或未激活",
+          "在错误的环境下安装了依赖",
+          "IDE 未选择虚拟环境的解释器"
+        ],
+        "checks": [
+          "创建：python -m venv venv",
+          "激活（Windows）：venv\\Scripts\\activate",
+          "确认解释器：激活后运行 where python"
+        ],
+        "solution": "python -m venv venv  然后  venv\\Scripts\\activate",
+        "further": "请发送 where python 与 python -m pip --version 的输出。"
+      }
+    },
+
+    {
+      "id": "pip_package_not_found",
+      "category": "pip",
+      "error_type": "PackageNotFound",
+      "priority": 0,
+      "patterns": ["Could not find a version that satisfies", "No matching distribution found", "找不到包"],
+      "keywords": ["pip", "install", "包", "找不到", "satisfies", "distribution"],
+      "response": {
+        "title": "pip 找不到可安装的包",
+        "causes": [
+          "包名拼写错误",
+          "当前源没有该包（私有包需指定源）",
+          "Python 版本不兼容，或需指定 index-url"
+        ],
+        "checks": [
+          "核对包名拼写（在 PyPI 上搜索确认）",
+          "尝试指定国内镜像源",
+          "确认 Python 版本满足包的兼容要求"
+        ],
+        "solution": "python -m pip install <包名> -i https://pypi.tuna.tsinghua.edu.cn/simple",
+        "further": "请发送完整报错与 python --version。"
+      }
+    },
+    {
+      "id": "pip_dependency_conflict",
+      "category": "pip",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["conflicting dependencies", "dependency conflict", "版本冲突", "incompatible"],
+      "keywords": ["pip", "conflict", "冲突", "依赖", "version", "版本", "incompatible", "resolver"],
+      "response": {
+        "title": "pip 依赖冲突",
+        "causes": [
+          "多个包要求同一依赖的不同版本",
+          "已安装版本与需求不兼容",
+          "requirements.txt 中版本固定过死"
+        ],
+        "checks": [
+          "查看冲突信息：python -m pip check",
+          "核对 requirements.txt 中的版本约束",
+          "考虑使用虚拟环境隔离不同项目"
+        ],
+        "solution": "python -m pip check",
+        "further": "请粘贴 pip 的完整冲突输出。"
+      }
+    },
+    {
+      "id": "pip_ssl_error",
+      "category": "pip",
+      "error_type": "SSLError",
+      "priority": 0,
+      "patterns": ["ssl", "SSL", "CERTIFICATE_VERIFY_FAILED", "证书验证", "certificate verify failed"],
+      "keywords": ["pip", "install", "镜像", "源", "trusted-host", "index-url", "证书"],
+      "response": {
+        "title": "pip 安装 SSL 证书错误",
+        "causes": [
+          "公司代理/防火墙拦截并替换了证书",
+          "系统时间不对导致证书校验失败",
+          "镜像源证书不受信任"
+        ],
+        "checks": [
+          "校正系统时间",
+          "尝试使用国内镜像源",
+          "临时跳过校验（仅限可信源）"
+        ],
+        "solution": "python -m pip install <包名> -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn",
+        "further": "如仍失败请发送完整报错与网络环境说明。"
+      }
+    },
+    {
+      "id": "pip_timeout_error",
+      "category": "pip",
+      "error_type": "TimeoutError",
+      "priority": 0,
+      "patterns": ["timed out", "Timed out", "ReadTimeout", "ConnectTimeout", "pip install 超时"],
+      "keywords": ["pip", "install", "镜像", "源", "timeout", "超时"],
+      "response": {
+        "title": "pip 安装超时",
+        "causes": [
+          "默认源（PyPI）访问慢或网络不稳定",
+          "代理/防火墙限制",
+          "包体积大且连接不稳定"
+        ],
+        "checks": [
+          "切换到国内镜像源",
+          "增大超时时间",
+          "检查代理设置"
+        ],
+        "solution": "python -m pip install <包名> -i https://pypi.tuna.tsinghua.edu.cn/simple --default-timeout=100",
+        "further": "请说明网络环境（是否挂代理/公司内网）。"
+      }
+    },
+    {
+      "id": "pip_permission_error",
+      "category": "pip",
+      "error_type": "PermissionDenied",
+      "priority": 0,
+      "patterns": ["Permission denied", "permission denied", "Access is denied", "拒绝访问", "WinError 5"],
+      "keywords": ["pip", "install", "permission", "权限", "管理员", "--user", "denied", "拒绝"],
+      "response": {
+        "title": "pip 安装权限错误",
+        "causes": [
+          "向系统级目录安装包但没有管理员权限",
+          "目标目录被占用或只读"
+        ],
+        "checks": [
+          "以管理员身份打开终端后重试",
+          "或使用 --user 安装到用户目录",
+          "建议优先在虚拟环境内安装"
+        ],
+        "solution": "python -m pip install --user <包名>",
+        "further": "请确认是否以管理员运行终端。"
+      }
+    },
+    {
+      "id": "pip_mirror",
+      "category": "pip",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["镜像", "换源", "清华源", "阿里源", "pypi.tuna", "index-url"],
+      "keywords": ["pip", "镜像", "源", "清华", "阿里", "换源", "加速", "慢"],
+      "response": {
+        "title": "pip 配置国内镜像源",
+        "causes": [
+          "默认 PyPI 源在国内访问慢或超时"
+        ],
+        "checks": [
+          "临时换源：pip install -i <镜像>",
+          "永久配置：pip config set global.index-url <镜像>"
+        ],
+        "solution": "pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple",
+        "further": "也可使用阿里源 https://mirrors.aliyun.com/pypi/simple/"
+      }
+    },
+
+    {
+      "id": "conda_create_env",
+      "category": "conda",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["conda create", "创建环境", "新建环境"],
+      "keywords": ["conda", "create", "创建", "环境", "env", "name"],
+      "response": {
+        "title": "conda 创建环境",
+        "causes": [
+          "命令参数错误",
+          "网络慢导致下载失败",
+          "channel 配置问题"
+        ],
+        "checks": [
+          "语法：conda create -n <环境名> python=3.10",
+          "可加 -y 跳过确认",
+          "网络慢可配置清华 channel"
+        ],
+        "solution": "conda create -n myenv python=3.10 -y",
+        "further": "请发送完整报错信息。"
+      }
+    },
+    {
+      "id": "conda_activate",
+      "category": "conda",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["conda activate", "激活环境", "EnvironmentNotWritableError", "CommandNotFoundError: conda"],
+      "keywords": ["conda", "activate", "激活", "环境", "activate 失败"],
+      "response": {
+        "title": "conda 环境激活问题",
+        "causes": [
+          "conda 未初始化到当前 shell（未 conda init）",
+          "PowerShell 执行策略限制",
+          "环境名拼写错误"
+        ],
+        "checks": [
+          "先运行：conda init powershell 后重启终端",
+          "查看环境列表：conda env list",
+          "Windows PowerShell 允许执行：Set-ExecutionPolicy RemoteSigned"
+        ],
+        "solution": "conda init powershell",
+        "further": "请发送 conda env list 与报错信息。"
+      }
+    },
+    {
+      "id": "conda_package_conflict",
+      "category": "conda",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["PackagesNotFoundError", "Solving environment", "conda 冲突", "conflicting", "依赖冲突"],
+      "keywords": ["conda", "conflict", "冲突", "solving", "environment", "resolve"],
+      "response": {
+        "title": "conda 依赖冲突 / 求解失败",
+        "causes": [
+          "conda 与 pip 混用导致冲突",
+          "channel 之间包版本不一致",
+          "求解环境过慢或失败"
+        ],
+        "checks": [
+          "优先使用 conda-forge：conda install -c conda-forge <包>",
+          "避免 conda 与 pip 反复混装",
+          "更新 conda：conda update conda"
+        ],
+        "solution": "conda install -c conda-forge <包>",
+        "further": "请粘贴 Solving environment 的报错。"
+      }
+    },
+    {
+      "id": "conda_command_not_found",
+      "category": "conda",
+      "error_type": "CommandNotFound",
+      "priority": 0,
+      "patterns": ["conda 不是内部", "conda is not recognized", "conda不是"],
+      "keywords": ["conda", "not recognized", "不是内部", "找不到", "命令", "command"],
+      "response": {
+        "title": "conda 命令未找到",
+        "causes": [
+          "conda 未加入系统 PATH",
+          "安装后未重启终端",
+          "使用 Anaconda Prompt 以外的终端"
+        ],
+        "checks": [
+          "使用“Anaconda Prompt”或“Anaconda Powershell Prompt”",
+          "检查 PATH 中是否包含 conda 的 Scripts 目录",
+          "安装后重启终端"
+        ],
+        "solution": "在 Anaconda Prompt 中运行 conda，或把 conda 目录加入 PATH",
+        "further": "请发送 where conda 的输出。"
+      }
+    },
+    {
+      "id": "conda_channel_slow",
+      "category": "conda",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["CondaHTTPError", "channel 慢", "conda 慢", "conda 超时", "镜像 channel"],
+      "keywords": ["conda", "channel", "镜像", "清华", "慢", "超时", "http"],
+      "response": {
+        "title": "conda 下载慢 / channel 报错",
+        "causes": [
+          "默认源（repo.anaconda.com）访问慢",
+          "channel 配置不当"
+        ],
+        "checks": [
+          "配置清华镜像：conda config --add channels <镜像>",
+          "查看当前 channels：conda config --show channels"
+        ],
+        "solution": "conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/",
+        "further": "请发送 conda config --show channels 输出。"
+      }
+    },
+
+    {
+      "id": "git_authentication_failed",
+      "category": "git",
+      "error_type": "AuthenticationFailed",
+      "priority": 0,
+      "patterns": ["Authentication failed", "fatal: Authentication", "Invalid username or password", "认证失败"],
+      "keywords": ["git", "认证", "密码", "token", "401", "authentication", "登录"],
+      "response": {
+        "title": "Git 认证失败",
+        "causes": [
+          "用户名/密码错误，或 GitHub 已改用 token 代替密码",
+          "凭据缓存中的旧密码失效",
+          "未配置 SSH key 或 key 无权限"
+        ],
+        "checks": [
+          "GitHub 使用 Personal Access Token 代替密码",
+          "更新缓存凭据（Windows 凭据管理器）",
+          "SSH 方式：配置 key 并测试 ssh -T git@github.com"
+        ],
+        "solution": "git remote set-url origin https://<用户名>:<token>@github.com/<用户名>/<仓库>.git",
+        "further": "请说明使用 HTTPS 还是 SSH，以及报错完整内容。"
+      }
+    },
+    {
+      "id": "git_repository_not_found",
+      "category": "git",
+      "error_type": "RepositoryNotFound",
+      "priority": 0,
+      "patterns": ["repository not found", "Remote not found", "fatal: repository", "仓库不存在"],
+      "keywords": ["git", "repository", "仓库", "not found", "404", "clone", "找不到"],
+      "response": {
+        "title": "Git 仓库不存在 / 找不到远程仓库",
+        "causes": [
+          "仓库地址拼写错误（大小写/用户名）",
+          "仓库为私有且无访问权限",
+          "仓库已被删除或改名"
+        ],
+        "checks": [
+          "在浏览器中打开仓库 URL 确认是否存在",
+          "确认账号对该仓库有访问权限",
+          "确认地址大小写正确"
+        ],
+        "solution": "核对并重新设置：git remote set-url origin <正确地址>",
+        "further": "请发送仓库地址与报错信息。"
+      }
+    },
+    {
+      "id": "git_merge_conflict",
+      "category": "git",
+      "error_type": "MergeConflict",
+      "priority": 0,
+      "patterns": ["merge conflict", "CONFLICT (content)", "Automatic merge failed", "合并冲突"],
+      "keywords": ["git", "merge", "conflict", "冲突", "合并", "<<<<<<<"],
+      "response": {
+        "title": "Git 合并冲突",
+        "causes": [
+          "两个分支修改了同一文件的同一部分"
+        ],
+        "checks": [
+          "查看冲突文件：git status",
+          "手动编辑冲突标记 <<<<<<< ======= >>>>>>> 后保留正确内容",
+          "解决后 git add 再 git commit"
+        ],
+        "solution": "git status",
+        "further": "解决后可运行 git add <文件> 再 git commit 完成合并。"
+      }
+    },
+    {
+      "id": "git_push_rejected",
+      "category": "git",
+      "error_type": "PushRejected",
+      "priority": 0,
+      "patterns": ["push rejected", "non-fast-forward", "failed to push", "fetch first", "推送被拒绝"],
+      "keywords": ["git", "push", "rejected", "推送", "拒绝", "rebase", "fetch"],
+      "response": {
+        "title": "Git 推送被拒绝",
+        "causes": [
+          "远程分支有本地没有的新提交（non-fast-forward）",
+          "没有推送权限（受保护分支）"
+        ],
+        "checks": [
+          "先拉取：git pull --rebase origin <分支>",
+          "解决冲突后再推送",
+          "确认是否有该分支的推送权限"
+        ],
+        "solution": "git pull --rebase origin <分支>",
+        "further": "请发送完整报错与所在分支。"
+      }
+    },
+    {
+      "id": "git_not_a_repository",
+      "category": "git",
+      "error_type": "NotARepository",
+      "priority": 0,
+      "patterns": ["not a git repository", "Not a git repository", "不是 git 仓库"],
+      "keywords": ["git", "repository", "仓库", "init", "目录"],
+      "response": {
+        "title": "当前目录不是 Git 仓库",
+        "causes": [
+          "在非仓库目录下运行 git 命令",
+          "忘记 git init 或 clone"
+        ],
+        "checks": [
+          "确认目录：pwd / cd 到仓库根目录",
+          "初始化：git init",
+          "或克隆：git clone <地址>"
+        ],
+        "solution": "git init",
+        "further": "请确认当前工作目录是否为项目根目录。"
+      }
+    },
+    {
+      "id": "git_branch",
+      "category": "git",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["branch", "分支", "checkout", "detached HEAD", "HEAD detached"],
+      "keywords": ["git", "branch", "分支", "checkout", "switch", "合并", "merge"],
+      "response": {
+        "title": "Git 分支操作",
+        "causes": [
+          "分支名冲突或不存在",
+          "处于 detached HEAD 状态",
+          "未设置上游分支"
+        ],
+        "checks": [
+          "查看分支：git branch -a",
+          "新建/切换：git switch -c <分支>",
+          "设置上游：git push -u origin <分支>"
+        ],
+        "solution": "git switch -c <新分支>",
+        "further": "请发送 git branch -a 输出与报错。"
+      }
+    },
+
+    {
+      "id": "windows_command_not_found",
+      "category": "windows",
+      "error_type": "CommandNotFound",
+      "priority": 10,
+      "patterns": ["不是内部或外部命令", "不是内部命令", "not recognized as an internal", "command not found", "无法识别"],
+      "keywords": ["命令", "不是内部", "not recognized", "command", "path", "找不到命令"],
+      "response": {
+        "title": "命令未找到（Windows）",
+        "causes": [
+          "程序未安装，或未加入系统 PATH",
+          "安装后未重启终端",
+          "命令拼写错误"
+        ],
+        "checks": [
+          "用 where <命令> 查找命令位置",
+          "检查系统环境变量 PATH",
+          "安装后重启终端/IDE"
+        ],
+        "solution": "将程序安装目录加入系统 PATH 环境变量后重启终端",
+        "further": "请发送 where <命令> 与 echo %PATH% 的输出。"
+      }
+    },
+    {
+      "id": "windows_path_error",
+      "category": "windows",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["环境变量", "PATH", "加入path", "配置path", "path 变量"],
+      "keywords": ["windows", "path", "环境变量", "配置", "变量", "where"],
+      "response": {
+        "title": "Windows 环境变量 PATH 配置",
+        "causes": [
+          "程序目录未加入 PATH，导致命令无法全局使用",
+          "PATH 修改后未生效"
+        ],
+        "checks": [
+          "打开“系统属性 → 高级 → 环境变量”编辑 Path",
+          "加入程序的可执行目录（如 ...\\Scripts）",
+          "重启终端使变更生效"
+        ],
+        "solution": "将程序目录加入 Path 后重启终端",
+        "further": "请发送 echo %PATH% 输出以便核对。"
+      }
+    },
+    {
+      "id": "windows_permission_error",
+      "category": "windows",
+      "error_type": "PermissionDenied",
+      "priority": 0,
+      "patterns": ["Access is denied", "拒绝访问", "Access denied", "需要管理员权限", "管理员权限"],
+      "keywords": ["windows", "权限", "管理员", "拒绝", "access", "denied", "administrator"],
+      "response": {
+        "title": "Windows 权限不足 / 拒绝访问",
+        "causes": [
+          "需要管理员权限才能操作",
+          "文件/目录被系统或安全软件保护",
+          "UAC（用户账户控制）限制"
+        ],
+        "checks": [
+          "右键“以管理员身份运行”程序/终端",
+          "检查文件是否被占用或只读",
+          "关闭可能拦截的安全软件"
+        ],
+        "solution": "以管理员身份运行终端后重试",
+        "further": "请说明具体报错与操作对象。"
+      }
+    },
+    {
+      "id": "windows_dll_missing",
+      "category": "windows",
+      "error_type": "DllMissing",
+      "priority": 0,
+      "patterns": ["DLL load failed", "找不到 dll", "程序无法启动", "缺少 dll", "dll 缺失", ".dll"],
+      "keywords": ["dll", "缺失", "找不到", "无法启动", "vc_redist", "运行库"],
+      "response": {
+        "title": "DLL 缺失 / 程序无法启动",
+        "causes": [
+          "缺少 VC++ 运行库（vcruntime140.dll 等）",
+          "DLL 未在 PATH 或程序目录中",
+          "32/64 位版本不匹配"
+        ],
+        "checks": [
+          "安装最新的 Microsoft Visual C++ Redistributable",
+          "将 DLL 所在目录加入 PATH",
+          "确认程序与 DLL 的位数（32/64）一致"
+        ],
+        "solution": "安装 Microsoft Visual C++ 2015-2022 Redistributable (x64)",
+        "further": "请发送缺失 DLL 的名称与程序版本。"
+      }
+    },
+
+    {
+      "id": "pytorch_cuda_unavailable",
+      "category": "pytorch",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["cuda.is_available", "is_available", "检测不到", "没有cuda", "no cuda", "cuda available false", "cuda不可用"],
+      "keywords": ["torch", "cuda", "is_available", "gpu", "显卡", "false", "检测不到", "不可用"],
+      "response": {
+        "title": "PyTorch 检测不到 CUDA / GPU",
+        "causes": [
+          "安装了 CPU 版 PyTorch（而非 CUDA 版）",
+          "显卡驱动过旧，或 CUDA 版本与 PyTorch 不匹配",
+          "nvidia-smi 能显示但 PyTorch 未编译 CUDA 支持"
+        ],
+        "checks": [
+          "nvidia-smi 确认驱动正常",
+          "python -c \"import torch; print(torch.__version__)\"（看是否含 +cuXXX）",
+          "python -c \"import torch; print(torch.version.cuda)\""
+        ],
+        "solution": "卸载后安装对应 CUDA 版：python -m pip install torch --index-url https://download.pytorch.org/whl/cu121",
+        "further": "请发送 nvidia-smi、torch.__version__、torch.version.cuda 的输出。"
+      }
+    },
+    {
+      "id": "pytorch_cuda_oom",
+      "category": "pytorch",
+      "error_type": "CUDAOutOfMemory",
+      "priority": 0,
+      "patterns": ["CUDA out of memory", "OutOfMemoryError", "显存不足", "out of memory"],
+      "keywords": ["cuda", "memory", "显存", "oom", "batch", "模型", "gpu"],
+      "response": {
+        "title": "CUDA 显存不足 (Out of Memory)",
+        "causes": [
+          "batch size 过大",
+          "模型过大，或梯度未释放",
+          "显存被其他进程占用"
+        ],
+        "checks": [
+          "查看占用：nvidia-smi",
+          "减小 batch size",
+          "启用 AMP/混合精度训练"
+        ],
+        "solution": "减小 batch size，或使用 torch.cuda.empty_cache() 释放缓存",
+        "further": "请发送 nvidia-smi 与报错信息。"
+      }
+    },
+    {
+      "id": "pytorch_cuda_error",
+      "category": "pytorch",
+      "error_type": "CUDAError",
+      "priority": 0,
+      "patterns": ["CUDA error", "CUDA kernel", "CUDA launch", "cuda error", "illegal memory access"],
+      "keywords": ["cuda", "error", "kernel", "device", "gpu", "显卡"],
+      "response": {
+        "title": "CUDA 运行时错误",
+        "causes": [
+          "驱动与 CUDA/PyTorch 版本不匹配",
+          "多线程/多进程并发使用 CUDA 冲突",
+          "显存或设备状态异常"
+        ],
+        "checks": [
+          "更新显卡驱动",
+          "确认 PyTorch 的 CUDA 版本与驱动兼容",
+          "重启 Python 进程 / 检查并发用法"
+        ],
+        "solution": "更新显卡驱动到最新稳定版",
+        "further": "请发送 nvidia-smi 与完整 CUDA 错误信息。"
+      }
+    },
+    {
+      "id": "pytorch_model_load_failed",
+      "category": "pytorch",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["加载模型", "load_state_dict", "model.load", "模型加载失败", "keys mismatch"],
+      "keywords": ["torch", "模型", "load", "state_dict", "checkpoint", "加载", "权重", "mismatch"],
+      "response": {
+        "title": "PyTorch 模型加载失败",
+        "causes": [
+          "checkpoint 路径错误或文件损坏",
+          "模型结构变化导致 state_dict 键不匹配",
+          "保存/加载设备不一致（CPU/GPU）"
+        ],
+        "checks": [
+          "确认文件存在与大小正常",
+          "打印 state_dict 的键：model.state_dict().keys()",
+          "加载时指定 map_location='cpu'"
+        ],
+        "solution": "torch.load(path, map_location='cpu')",
+        "further": "请发送报错信息与 checkpoint 文件大小。"
+      }
+    },
+    {
+      "id": "pytorch_version_mismatch",
+      "category": "pytorch",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["版本不匹配", "version mismatch", "torch版本", "torch 版本", "与torch版本"],
+      "keywords": ["torch", "版本", "version", "不匹配", "mismatch", "cuda", "兼容"],
+      "response": {
+        "title": "PyTorch 版本 / CUDA 兼容问题",
+        "causes": [
+          "PyTorch 版本与 CUDA 版本不匹配",
+          "torch 与 torchvision/torchaudio 版本不兼容",
+          "Python 版本不支持该 PyTorch 版本"
+        ],
+        "checks": [
+          "python -c \"import torch; print(torch.__version__)\"",
+          "python -c \"import torch; print(torch.version.cuda)\"",
+          "按 PyTorch 官网选择匹配的安装命令"
+        ],
+        "solution": "在 pytorch.org 官网选择对应 CUDA 版本重新安装",
+        "further": "请发送 torch.__version__ 与 nvidia-smi 输出。"
+      }
+    },
+    {
+      "id": "pytorch_install",
+      "category": "pytorch",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["安装torch", "安装pytorch", "install torch", "install pytorch", "装pytorch"],
+      "keywords": ["torch", "pytorch", "安装", "install", "gpu", "cuda", "cpu"],
+      "response": {
+        "title": "安装 PyTorch",
+        "causes": [
+          "需根据是否有 NVIDIA 显卡选择 CPU 或 CUDA 版"
+        ],
+        "checks": [
+          "CPU 版：python -m pip install torch",
+          "CUDA 版（以 cu121 为例）：python -m pip install torch --index-url https://download.pytorch.org/whl/cu121",
+          "安装后验证：python -c \"import torch; print(torch.cuda.is_available())\""
+        ],
+        "solution": "python -m pip install torch --index-url https://download.pytorch.org/whl/cu121",
+        "further": "请确认是否有 NVIDIA 显卡与 nvidia-smi 是否正常。"
+      }
+    },
+
+    {
+      "id": "network_ssl_error",
+      "category": "network",
+      "error_type": "SSLError",
+      "priority": 10,
+      "patterns": ["ssl", "SSL", "CERTIFICATE_VERIFY_FAILED", "certificate verify failed", "证书错误"],
+      "keywords": ["https", "request", "证书", "curl", "url", "连接", "访问", "请求"],
+      "response": {
+        "title": "SSL 证书错误",
+        "causes": [
+          "公司代理/防火墙替换了证书导致校验失败",
+          "系统时间错误",
+          "证书过期或不受信任"
+        ],
+        "checks": [
+          "校正系统时间",
+          "curl 测试：curl -v <url> 查看证书链",
+          "确认是否走公司代理"
+        ],
+        "solution": "校正系统时间；如为代理导致可配置受信任的 CA 证书",
+        "further": "请发送完整报错与请求地址。"
+      }
+    },
+    {
+      "id": "network_timeout",
+      "category": "network",
+      "error_type": "TimeoutError",
+      "priority": 10,
+      "patterns": ["timed out", "Timed out", "ReadTimeout", "ConnectTimeout", "请求超时", "timeout"],
+      "keywords": ["request", "连接", "url", "http", "访问", "请求", "download", "下载", "curl"],
+      "response": {
+        "title": "网络请求超时",
+        "causes": [
+          "网络不稳定或目标服务器响应慢",
+          "代理/防火墙限制",
+          "DNS 解析慢"
+        ],
+        "checks": [
+          "ping 目标主机 / curl -v 定位卡在哪个阶段",
+          "检查代理设置",
+          "尝试更换网络或增大超时时间"
+        ],
+        "solution": "检查代理并重试；可增大客户端 timeout 参数",
+        "further": "请发送 curl -v <url> 的输出。"
+      }
+    },
+    {
+      "id": "network_connection_error",
+      "category": "network",
+      "error_type": "ConnectionError",
+      "priority": 0,
+      "patterns": ["Connection refused", "Failed to establish a new connection", "ConnectionResetError", "连接被拒绝", "connection error"],
+      "keywords": ["连接", "拒绝", "refused", "connection", "端口", "服务", "request"],
+      "response": {
+        "title": "网络连接被拒绝 / 连接错误",
+        "causes": [
+          "目标服务未启动或端口未监听",
+          "防火墙/安全组拦截",
+          "地址或端口写错"
+        ],
+        "checks": [
+          "确认服务已启动并监听正确端口",
+          "检查防火墙/安全组规则",
+          "telnet 或 nc 测试端口连通性"
+        ],
+        "solution": "确认目标服务已启动，并检查防火墙是否放行对应端口",
+        "further": "请发送目标地址、端口与完整报错。"
+      }
+    },
+    {
+      "id": "network_proxy",
+      "category": "network",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["代理", "proxy", "vpn", "翻墙", "localhost:7890", "127.0.0.1:7890"],
+      "keywords": ["proxy", "代理", "vpn", "7890", "梯子", "clash", "机场"],
+      "response": {
+        "title": "网络代理设置问题",
+        "causes": [
+          "代理未开启或已开启但未配置到工具",
+          "代理与防火墙冲突",
+          "需为 pip/git 单独配置代理"
+        ],
+        "checks": [
+          "检查系统代理或 Clash 等工具是否开启",
+          "为 pip 配置：pip install <包> --proxy http://127.0.0.1:7890",
+          "为 git 配置：git config --global http.proxy http://127.0.0.1:7890"
+        ],
+        "solution": "git config --global http.proxy http://127.0.0.1:7890",
+        "further": "请说明使用的代理工具与端口。"
+      }
+    },
+    {
+      "id": "network_dns",
+      "category": "network",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["dns", "域名解析", "解析失败", "Name or service not known", "getaddrinfo failed"],
+      "keywords": ["dns", "域名", "解析", "getaddrinfo", "host", "无法解析"],
+      "response": {
+        "title": "DNS 解析失败",
+        "causes": [
+          "DNS 服务器不可用或配置错误",
+          "域名拼写错误",
+          "hosts 文件被修改"
+        ],
+        "checks": [
+          "nslookup <域名> 测试解析",
+          "更换 DNS（如 8.8.8.8 / 223.5.5.5）",
+          "检查 hosts 文件"
+        ],
+        "solution": "将 DNS 改为 223.5.5.5（阿里）或 8.8.8.8",
+        "further": "请发送 nslookup <域名> 的输出。"
+      }
+    },
+
+    {
+      "id": "greeting",
+      "category": "general",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["你好", "您好", "在吗", "在么", "hi", "hello", "嗨"],
+      "keywords": [],
+      "response": {
+        "title": "你好，我是 IT 技术支持助手",
+        "causes": [],
+        "checks": [],
+        "solution": "你可以描述遇到的问题（如报错信息、安装失败、环境配置等），我会帮你定位。",
+        "further": "直接粘贴完整报错信息效果最好。"
+      }
+    },
+    {
+      "id": "thanks",
+      "category": "general",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["谢谢", "感谢", "多谢", "thank you", "thanks"],
+      "keywords": [],
+      "response": {
+        "title": "不客气",
+        "causes": [],
+        "checks": [],
+        "solution": "很高兴能帮到你，还有其他问题吗？",
+        "further": null
+      }
+    },
+    {
+      "id": "goodbye",
+      "category": "general",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["再见", "拜拜", "bye", "退出"],
+      "keywords": [],
+      "response": {
+        "title": "再见",
+        "causes": [],
+        "checks": [],
+        "solution": "祝顺利，有问题随时回来。",
+        "further": null
+      }
+    },
+    {
+      "id": "human_handoff",
+      "category": "general",
+      "error_type": null,
+      "priority": 0,
+      "patterns": ["转人工", "人工客服", "找人工", "真人", "人工服务"],
+      "keywords": ["人工", "客服", "转接"],
+      "response": {
+        "title": "转接人工",
+        "causes": [],
+        "checks": [],
+        "solution": "好的，已记录你的问题。请补充联系方式与具体报错，稍后人工支持会跟进。",
+        "further": null
+      }
+    }
+  ]
+}
