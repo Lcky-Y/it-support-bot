@@ -63,3 +63,5 @@ EMBEDDING_MODEL_PATH = os.getenv(
 FUSION_TOP_N = 10   # 融合前各检索器取的前 N 条
 RRF_K = 60          # Reciprocal Rank Fusion 平滑常数
 EXACT_BOOST = 0.5   # 技术错误精确命中时的额外排名加成
+TECH_BOOST = 0.2    # 查询命中的技术栈与条目技术栈匹配时的加成（Metadata Boost）
+PLATFORM_BOOST = 0.15   # 平台匹配加成（Metadata Boost）

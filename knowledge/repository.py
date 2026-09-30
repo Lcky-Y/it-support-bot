@@ -4,15 +4,27 @@
 Markdown 文档仍保留，仅作为导入源（由 importer.py 写入本库）。
 
 对外只读接口 get_all_chunks() 返回与 text_splitter.split_entries() 完全一致的
-chunk 结构：{source, category, title, keywords, content}。
+chunk 结构；fts_search() 提供基于 FTS5 的全文（BM25）检索。
 """
 import os
+import re
 import json
 import sqlite3
 
 from config import KNOWLEDGE_DB_PATH
 
 _SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.sql")
+
+# FTS5 trigram 分词无法匹配 <3 字符的词；只保留中英文数字，其余作为分隔符
+_NON_WORD_RE = re.compile(r"[^\u4e00-\u9fa5A-Za-z0-9]+")
+_MIN_TERM_LEN = 3
+
+
+def _sanitize_fts(text: str) -> str:
+    """把用户查询转成安全的 FTS5 MATCH 表达式：去除特殊字符，多词用 OR 连接。"""
+    cleaned = _NON_WORD_RE.sub(" ", text or "")
+    terms = [t for t in cleaned.split() if len(t) >= _MIN_TERM_LEN]
+    return " OR ".join(terms)
 
 
 class KnowledgeRepository:
@@ -41,6 +53,29 @@ class KnowledgeRepository:
     # ------------------------------------------------------------------
     # 读取
     # ------------------------------------------------------------------
+    @staticmethod
+    def _row_to_chunk(r) -> dict:
+        def _list(field):
+            try:
+                val = json.loads(r[field])
+            except (ValueError, TypeError):
+                val = []
+            return val if isinstance(val, list) else []
+
+        return {
+            "source": r["source"],
+            "category": r["category"],
+            "title": r["title"],
+            "subcategory": r["subcategory"] or "",
+            "issue_type": r["issue_type"] or "",
+            "error_type": r["error_type"] or "",
+            "platform": _list("platform"),
+            "technology": _list("technology"),
+            "keywords": _list("keywords"),
+            "aliases": _list("aliases"),
+            "content": r["content"],
+        }
+
     def get_all_chunks(self) -> list:
         """返回全部 chunk，结构与 split_entries() 输出一致；失败返回空列表。"""
         if not self.exists():
@@ -48,30 +83,38 @@ class KnowledgeRepository:
         try:
             with self._connect() as conn:
                 rows = conn.execute(
-                    "SELECT i.title, i.category, i.source, i.keywords, c.content "
+                    "SELECT i.title, i.category, i.subcategory, i.issue_type, "
+                    "i.error_type, i.platform, i.technology, i.keywords, i.aliases, "
+                    "i.source, c.content "
                     "FROM knowledge_chunks c "
                     "JOIN knowledge_items i ON c.knowledge_id = i.id "
                     "ORDER BY i.id, c.chunk_index"
                 ).fetchall()
         except Exception:
             return []
+        return [self._row_to_chunk(r) for r in rows]
 
-        chunks = []
-        for r in rows:
-            try:
-                keywords = json.loads(r["keywords"])
-            except (ValueError, TypeError):
-                keywords = []
-            if not isinstance(keywords, list):
-                keywords = []
-            chunks.append({
-                "source": r["source"],
-                "category": r["category"],
-                "title": r["title"],
-                "keywords": keywords,
-                "content": r["content"],
-            })
-        return chunks
+    def fts_search(self, query: str, limit: int = 10) -> list:
+        """FTS5/BM25 全文检索，返回按相关度排序的 chunk 列表；失败/无结果返回空列表。"""
+        match = _sanitize_fts(query)
+        if not match or not self.exists():
+            return []
+        try:
+            with self._connect() as conn:
+                rows = conn.execute(
+                    "SELECT i.title, i.category, i.subcategory, i.issue_type, "
+                    "i.error_type, i.platform, i.technology, i.keywords, i.aliases, "
+                    "i.source, c.content "
+                    "FROM knowledge_fts "
+                    "JOIN knowledge_chunks c ON c.id = knowledge_fts.chunk_id "
+                    "JOIN knowledge_items i ON c.knowledge_id = i.id "
+                    "WHERE knowledge_fts MATCH ? "
+                    "ORDER BY bm25(knowledge_fts) LIMIT ?",
+                    (match, limit),
+                ).fetchall()
+        except Exception:
+            return []
+        return [self._row_to_chunk(r) for r in rows]
 
     def count_items(self) -> int:
         return self._scalar("SELECT COUNT(*) FROM knowledge_items")

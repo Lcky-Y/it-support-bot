@@ -1,7 +1,7 @@
 """
 知识库导入脚本
-把 knowledge/documents/ 下的 Markdown 文档解析、切块后写入 SQLite 知识库。
-Markdown 仅作为数据源，运行时检索直接从 SQLite 读取。
+把 knowledge/documents/ 下的 Markdown 文档解析、切块后写入 SQLite 知识库，
+并同步填充 FTS5 全文索引。Markdown 仅作为数据源，运行时检索直接从 SQLite 读取。
 
 用法：python knowledge/importer.py
 """
@@ -31,6 +31,7 @@ def import_to_db(documents_dir=None, db_path=None, verbose: bool = True) -> int:
     conn = sqlite3.connect(repo.db_path)
     try:
         with conn:
+            conn.execute("DELETE FROM knowledge_fts")
             conn.execute("DELETE FROM knowledge_chunks")
             conn.execute("DELETE FROM knowledge_items")
 
@@ -40,27 +41,47 @@ def import_to_db(documents_dir=None, db_path=None, verbose: bool = True) -> int:
                 key = (c["source"], c["title"])
                 if key not in item_ids:
                     cur = conn.execute(
-                        "INSERT INTO knowledge_items(title, category, source, keywords) "
-                        "VALUES (?, ?, ?, ?)",
+                        "INSERT INTO knowledge_items("
+                        "title, category, subcategory, issue_type, error_type, "
+                        "platform, technology, keywords, aliases, source"
+                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         (
                             c["title"],
                             c["category"],
-                            c["source"],
+                            c.get("subcategory", ""),
+                            c.get("issue_type", ""),
+                            c.get("error_type", ""),
+                            json.dumps(c.get("platform", []), ensure_ascii=False),
+                            json.dumps(c.get("technology", []), ensure_ascii=False),
                             json.dumps(c.get("keywords", []), ensure_ascii=False),
+                            json.dumps(c.get("aliases", []), ensure_ascii=False),
+                            c["source"],
                         ),
                     )
                     item_ids[key] = cur.lastrowid
                     chunk_counts[key] = 0
+
                 idx = chunk_counts[key]
                 chunk_counts[key] += 1
-                conn.execute(
+                cur = conn.execute(
                     "INSERT INTO knowledge_chunks(knowledge_id, chunk_index, content) "
                     "VALUES (?, ?, ?)",
                     (item_ids[key], idx, c["content"]),
                 )
+                conn.execute(
+                    "INSERT INTO knowledge_fts(chunk_id, title, keywords, aliases, content) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (
+                        cur.lastrowid,
+                        c["title"],
+                        " ".join(c.get("keywords", [])),
+                        " ".join(c.get("aliases", [])),
+                        c["content"],
+                    ),
+                )
 
             meta = {
-                "schema_version": "1",
+                "schema_version": "2",
                 "source": "markdown",
                 "entry_count": str(len(entries)),
                 "chunk_count": str(len(chunks)),

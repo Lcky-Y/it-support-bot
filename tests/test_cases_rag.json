@@ -48,7 +48,22 @@
     {"query": "请求超时", "expected_source": "documents/network.md", "expected_title": "请求超时"},
     {"query": "连接被拒绝", "expected_source": "documents/network.md", "expected_title": "连接被拒绝"},
     {"query": "DNS 解析失败", "expected_source": "documents/network.md", "expected_title": "DNS 解析失败"},
-    {"query": "配置代理", "expected_source": "documents/network.md", "expected_title": "代理设置"}
+    {"query": "配置代理", "expected_source": "documents/network.md", "expected_title": "代理设置"},
+
+    {"query": "docker 容器启动就退出", "expected_source": "documents/docker.md", "expected_title": "容器启动后立即退出"},
+    {"query": "docker 端口被占用", "expected_source": "documents/docker.md", "expected_title": "端口被占用"},
+    {"query": "docker pull 镜像超时", "expected_source": "documents/docker.md", "expected_title": "拉取镜像超时或缓慢"},
+    {"query": "docker 拉取镜像认证失败", "expected_source": "documents/docker.md", "expected_title": "拉取镜像认证失败"},
+    {"query": "docker 镜像不存在", "expected_source": "documents/docker.md", "expected_title": "镜像不存在或无法找到"},
+    {"query": "docker daemon 未运行", "expected_source": "documents/docker.md", "expected_title": "Docker daemon 未运行"},
+    {"query": "windows 下 docker 需要 wsl2", "expected_source": "documents/docker.md", "expected_title": "Windows 需要 WSL2"},
+    {"query": "容器内 permission denied", "expected_source": "documents/docker.md", "expected_title": "容器内权限不足 Permission denied"},
+    {"query": "docker 磁盘空间不足", "expected_source": "documents/docker.md", "expected_title": "磁盘空间不足"},
+    {"query": "docker compose up 服务起不来", "expected_source": "documents/docker.md", "expected_title": "docker-compose 服务无法启动"},
+    {"query": "容器间无法通信", "expected_source": "documents/docker.md", "expected_title": "容器间无法通信"},
+    {"query": "docker 数据卷挂载失败", "expected_source": "documents/docker.md", "expected_title": "数据卷挂载失败"},
+    {"query": "docker 容器时区不对", "expected_source": "documents/docker.md", "expected_title": "容器时区不对"},
+    {"query": "docker 清理磁盘占用 prune", "expected_source": "documents/docker.md", "expected_title": "清理磁盘占用"}
   ],
   "paraphrase_cases": [
     {"query": "明明电脑有N卡为什么pytorch还是用CPU", "expected_source": "documents/pytorch.md", "expected_title": "torch.cuda.is_available() 返回 False"},
@@ -60,6 +75,10 @@
     {"query": "网页打不开说证书有问题", "expected_source": "documents/network.md", "expected_title": "SSL 证书错误"},
     {"query": "程序运行提示缺了个 dll 文件", "expected_source": "documents/windows.md", "expected_title": "DLL 缺失"},
     {"query": "两个分支改了同一个文件怎么合到一起", "expected_source": "documents/git.md", "expected_title": "git 合并冲突"},
-    {"query": "命令行敲了个命令没反应提示找不到", "expected_source": "documents/windows.md", "expected_title": "命令未找到"}
+    {"query": "命令行敲了个命令没反应提示找不到", "expected_source": "documents/windows.md", "expected_title": "命令未找到"},
+    {"query": "我 docker 里跑的程序一启动就没了", "expected_source": "documents/docker.md", "expected_title": "容器启动后立即退出"},
+    {"query": "docker 拉镜像一直卡着下不动", "expected_source": "documents/docker.md", "expected_title": "拉取镜像超时或缓慢"},
+    {"query": "我在 windows 上用 docker 提示要装 wsl", "expected_source": "documents/docker.md", "expected_title": "Windows 需要 WSL2"},
+    {"query": "容器里没权限改文件", "expected_source": "documents/docker.md", "expected_title": "容器内权限不足 Permission denied"}
   ]
 }

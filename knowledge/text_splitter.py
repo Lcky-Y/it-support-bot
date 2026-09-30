@@ -33,6 +33,12 @@ def _chunk(entry: dict, content: str, suffix: str = "") -> dict:
         "category": entry["category"],
         "title": entry["title"],
         "keywords": entry.get("keywords", []),
+        "aliases": entry.get("aliases", []),
+        "platform": entry.get("platform", []),
+        "technology": entry.get("technology", []),
+        "issue_type": entry.get("issue_type", ""),
+        "error_type": entry.get("error_type", ""),
+        "subcategory": entry.get("subcategory", ""),
         "content": content,
     }
 

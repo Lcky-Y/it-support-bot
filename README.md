@@ -16,8 +16,9 @@
 | Windows | 命令未找到、PATH、权限、DLL 缺失 |
 | PyTorch | CUDA 不可用、显存不足、模型加载、版本匹配 |
 | 网络 | SSL、超时、连接错误、代理、DNS |
+| Docker | daemon、镜像拉取、容器退出、端口/网络、数据卷、compose、WSL2 |
 
-规则库共 **45 条**，技术知识库文档 **72 条**（`knowledge/documents/`），测试问题 **98 条**，规则识别准确率目标 ≥ 85%（当前 100%）。RAG 检索 benchmark（42 精确 + 10 语义改写）：Hybrid Recall@1=78.8% / Recall@3=96.2% / Recall@5=100%。
+规则库共 **45 条**，技术知识库文档 **109 条**（`knowledge/documents/`，含 Docker 37 条），测试问题 **98 条**，规则识别准确率目标 ≥ 85%（当前 100%）。RAG 检索 benchmark（56 精确 + 14 语义改写）：Hybrid Recall@1=71.4% / Recall@3=97.1% / Recall@5=100%。
 
 ## 架构
 
@@ -43,6 +44,7 @@
 │   ├── error_parser.py        # 错误信息解析
 │   ├── rule_engine.py         # 多层规则匹配
 │   ├── intent_classifier.py   # 技术领域粗分类
+│   ├── query_analyzer.py      # 检索前 Query 理解（技术 token / 平台 / 技术栈）
 │   ├── diagnostic_engine.py   # 诊断流程编排
 │   └── response_formatter.py  # 结构化回复
 ├── llm/                       # 大模型
@@ -60,7 +62,7 @@
 │   ├── build_index.py          # 向量索引构建脚本
 │   ├── rules.json             # 故障诊断规则库（45 条）
 │   ├── faq.json               # 补充 FAQ
-│   ├── documents/             # 技术知识库文档（72 条，导入源）
+│   ├── documents/             # 技术知识库文档（109 条，导入源）
 │   │   ├── python.md
 │   │   ├── pip.md
 │   │   ├── conda.md
@@ -68,7 +70,8 @@
 │   │   ├── windows.md
 │   │   ├── pytorch.md
 │   │   ├── cuda.md
-│   │   └── network.md
+│   │   ├── network.md
+│   │   └── docker.md
 │   ├── database/              # SQLite 知识库（importer.py 生成）
 │   │   └── knowledge.db
 │   ├── models/                # 本地 embedding 模型（离线，需手动放置）
@@ -90,7 +93,7 @@
     ├── test_cli.py
     ├── test_e2e.py
     ├── test_cases.json        # 98 条标注问题集
-    └── test_cases_rag.json    # 42 精确 + 10 语义改写 RAG benchmark
+    └── test_cases_rag.json    # 56 精确 + 14 语义改写 RAG benchmark
 ```
 
 ## 快速开始
@@ -216,6 +219,17 @@ python tests/test_e2e.py              # 端到端场景测试
 - ...
 ```
 
+可选小节（V1.2 新增，用于检索增强，缺失时为空）：
+
+```markdown
+### 别名      空格/逗号分隔的常见口语化说法（提升中文改写召回）
+### 平台      windows / linux / macos（可多个，用于 Metadata Boost）
+### 技术栈    docker、compose 等相关技术（用于 Metadata Boost）
+### 故障类型  安装失败 / 权限问题 / 网络问题 等
+### 错误类型  标准化错误标识（如 docker_daemon_not_running）
+### 子类      更细粒度分类
+```
+
 规则未命中时，系统会从这些文档中检索 top-3 相关条目，拼入 LLM 提示词综合诊断，并在回复中附带【参考来源】。
 
 ## 检索（RAG / Hybrid Retrieval）
@@ -223,18 +237,23 @@ python tests/test_e2e.py              # 端到端场景测试
 `KnowledgeService` 对外接口统一为 `retrieve(query, top_k, mode)`，内部按 `mode` 分派：
 
 ```
-retrieve(query, top_k)
+retrieve(query, top_k, mode)
    → mode = "auto"（默认）
-        ├─ 向量可用 → Hybrid（Lexical + Vector → RRF → Exact Boost）
-        └─ 不可用   → Lexical（关键词 + 字符 n-gram）
+        ├─ 向量可用 → Hybrid（Query 分析 → 关键词 + 向量 → RRF → 精确命中 + Metadata Boost）
+        └─ 不可用   → Lexical（关键词 + 别名 + 字符 n-gram）
+   → mode = "lexical" / "vector" / "fts" / "hybrid" 可显式指定
 ```
 
 - **模型**：`paraphrase-multilingual-MiniLM-L12-v2`（中英文多语言，384 维）
 - **模型加载**：从 `knowledge/models/` 本地目录离线加载（`local_files_only`），禁止访问 Hugging Face
 - **知识存储**：SQLite（`knowledge/database/knowledge.db`），Markdown 仅作导入源
+- **Query Analyzer**：检索前提取技术栈 / 平台 / 错误 token / 版本号，驱动 Metadata Boost
+- **别名（Aliases）**：口语化说法进入词法打分，提升中文改写（paraphrase）召回
+- **FTS5**：SQLite `trigram` 全文索引（BM25），通过 `mode="fts"` 可用；因 trigram 对中文分词有限，默认 Hybrid 不混入以避免通用词稀释精确命中
 - **向量相似度**：L2 归一化 + `IndexFlatIP`（等价余弦相似度）
 - **融合**：Reciprocal Rank Fusion（k=60），Lexical Top-10 + Vector Top-10
-- **Exact Match Boost**：技术错误精确命中按命中强度加权，保证精确错误名不被语义相近的其它条目挤掉
+- **Exact Match Boost**：技术错误精确命中按命中强度加权
+- **Metadata Boost**：技术栈 / 平台匹配给予额外加成
 - **惰性加载**：仅首次触发检索时才加载 torch + 模型，规则命中的常规对话零开销
 - **索引持久化**：`knowledge/embeddings/`（`index.faiss` + `metadata.json`）
 
@@ -244,15 +263,15 @@ retrieve(query, top_k)
 python knowledge/importer.py && python knowledge/build_index.py
 ```
 
-### Benchmark 对比（42 精确 + 10 语义改写）
+### Benchmark 对比（56 精确 + 14 语义改写）
 
 | 检索器 | Recall@1 | Recall@3 | Recall@5 |
 |---|---|---|---|
-| Lexical（关键词） | 75.0% | 96.2% | 100% |
-| Vector（向量） | 69.2% | 88.5% | 90.4% |
-| **Hybrid（融合）** | **78.8%** | **96.2%** | **100%** |
+| Lexical（关键词） | 55.7% | 97.1% | 97.1% |
+| Vector（向量） | 61.4% | 82.9% | 87.1% |
+| **Hybrid（融合）** | **71.4%** | **97.1%** | **100%** |
 
-语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 30% 提升到 50%，同时 Recall@3 不低于 Lexical。
+语义改写问题上 Hybrid 的 Recall@1 从 Lexical 的 14.3% 提升到 28.6%，同时 Recall@3 不低于 Lexical。
 
 ## 已知限制
 

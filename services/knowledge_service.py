@@ -4,6 +4,8 @@
 Stage 5.1：向量检索（sentence-transformers + FAISS）+ 关键词降级。
 Stage 5.2：Hybrid 融合 —— Lexical Top-N + Vector Top-N → RRF 融合
            → 技术错误精确命中加成（Exact Match Boost）→ Top-K。
+V1.2：Hybrid V2 —— Query Analyzer 提取技术栈/平台/token，
+      检索三路融合（关键词 + FTS5/BM25 + 向量）→ RRF → 精确命中 + Metadata Boost。
 
 对外接口不变：retrieve(query, top_k)，并可指定 mode：
     mode = "auto"   （默认）向量可用则 Hybrid，否则 Lexical
@@ -14,8 +16,9 @@ Stage 5.2：Hybrid 融合 —— Lexical Top-N + Vector Top-N → RRF 融合
 import re
 
 from config import (
-    FUSION_TOP_N, RRF_K, EXACT_BOOST, KNOWLEDGE_DB_PATH,
+    FUSION_TOP_N, RRF_K, EXACT_BOOST, TECH_BOOST, PLATFORM_BOOST, KNOWLEDGE_DB_PATH,
 )
+from core.query_analyzer import analyze
 from knowledge.document_loader import load_documents
 from knowledge.text_splitter import split_entries
 from knowledge.embedding_model import dependencies_available, get_embedder
@@ -33,8 +36,10 @@ class KnowledgeService:
     def __init__(self, documents_dir=None, use_vector: bool = True, db_path=None):
         # 默认从 SQLite 知识库读取 chunk（由 Markdown 导入）；数据库缺失/为空时回退到
         # 直接解析 Markdown。显式传入 documents_dir 时按旧逻辑直接读取该目录（测试/离线源）。
+        self._repo = None
         if documents_dir is None:
             repo = KnowledgeRepository(db_path or KNOWLEDGE_DB_PATH)
+            self._repo = repo
             self.chunks = repo.get_all_chunks()
             if not self.chunks:
                 self.chunks = split_entries(load_documents())
@@ -86,10 +91,15 @@ class KnowledgeService:
         for kw in chunk.get("keywords", []):
             if kw and kw.lower() in query_lower:
                 score += 3
+        for alias in chunk.get("aliases", []):
+            if alias and alias.lower() in query_lower:
+                score += 4
         title = chunk.get("title", "").lower()
         if title and title in query_lower:
             score += 4
-        score += len(_bigrams(query_lower) & _bigrams(chunk.get("content", "").lower())) * 0.1
+        # 别名也纳入字符 bigram 相似度，覆盖口语化改写
+        searchable = chunk.get("content", "") + " " + " ".join(chunk.get("aliases", []))
+        score += len(_bigrams(query_lower) & _bigrams(searchable.lower())) * 0.1
         return score
 
     def _retrieve_lexical(self, query: str, top_k: int) -> list:
@@ -106,6 +116,11 @@ class KnowledgeService:
         vec = self._embedder.encode([query])[0]
         return self._vector_store.search(vec, top_k)
 
+    def _retrieve_fts(self, query: str, top_k: int) -> list:
+        if self._repo is None:
+            return []
+        return self._repo.fts_search(query, top_k)
+
     # ------------------------------------------------------------------
     # 融合
     # ------------------------------------------------------------------
@@ -113,40 +128,48 @@ class KnowledgeService:
     def _key(chunk: dict):
         return (chunk.get("source"), chunk.get("title"))
 
-    def _rrf(self, *ranked_lists, k: int = RRF_K):
-        """Reciprocal Rank Fusion：合并多个排序列表，返回 [(score, full_chunk), ...]。"""
+    def _rrf(self, *ranked_lists, weights=None, k: int = RRF_K):
+        """Reciprocal Rank Fusion：合并多个排序列表（可加权），返回 [(score, full_chunk), ...]。"""
+        if weights is None:
+            weights = [1.0] * len(ranked_lists)
         scores = {}
         chunk_by_key = {}
-        for lst in ranked_lists:
+        for lst, w in zip(ranked_lists, weights):
             for rank, chunk in enumerate(lst):
                 key = self._key(chunk)
                 chunk_by_key[key] = self._chunk_index.get(key, chunk)
-                scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank + 1)
+                scores[key] = scores.get(key, 0.0) + w / (k + rank + 1)
         ordered = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
         return [(score, chunk_by_key[key]) for key, score in ordered]
 
-    def _apply_exact_boost(self, query: str, scored):
-        """技术错误精确命中时给予额外排名加成，且与命中强度成正比：
-        命中关键词越多 / 命中标题，加成越大，避免通用词（如 "git"、"pip"）把
-        更具体的正确条目挤下去。"""
+    def _apply_boost(self, query: str, scored, analysis: dict):
+        """精确命中 + Metadata Boost：关键词 / 别名 / 标题命中按强度加成，技术栈与平台
+        匹配也给予加成，避免通用词（如 "git"、"pip"）把更具体的正确条目挤下去。"""
         query_lower = query.lower()
+        tech_set = set(analysis.get("technologies", []))
+        plat_set = set(analysis.get("platforms", []))
         out = []
         for score, chunk in scored:
             hits = self._keyword_hits(query_lower, chunk)
+            hits += sum(1 for a in chunk.get("aliases", []) if a and a.lower() in query_lower)
             title = (chunk.get("title") or "").lower()
             if title and title in query_lower:
                 hits += 3   # 标题被完整命中，信号极强
-            if hits >= 1:
-                score += EXACT_BOOST * hits
-            out.append((score, chunk))
+            boost = EXACT_BOOST * hits if hits >= 1 else 0.0
+            boost += TECH_BOOST * len(tech_set & set(chunk.get("technology", [])))
+            boost += PLATFORM_BOOST * len(plat_set & set(chunk.get("platform", [])))
+            out.append((score + boost, chunk))
         out.sort(key=lambda x: x[0], reverse=True)
         return [c for _, c in out]
 
     def _hybrid_retrieve(self, query: str, top_k: int) -> list:
+        analysis = analyze(query)
         lexical = self._retrieve_lexical(query, FUSION_TOP_N)
         vector = self._retrieve_vector(query, FUSION_TOP_N)
+        # 默认 Hybrid 只用关键词 + 向量两路：FTS5 trigram 对中文分词支持有限，
+        # 混入会导致通用词（如 "docker"）稀释精确命中，故仅在 mode="fts" 单独启用
         fused = self._rrf(lexical, vector)
-        return self._apply_exact_boost(query, fused)[:top_k]
+        return self._apply_boost(query, fused, analysis)[:top_k]
 
     # ------------------------------------------------------------------
     # 对外接口
@@ -157,6 +180,9 @@ class KnowledgeService:
 
         if mode == "lexical":
             return self._retrieve_lexical(query, top_k)
+
+        if mode == "fts":
+            return self._retrieve_fts(query, top_k)
 
         if mode == "vector":
             if self._vector_store is None:
